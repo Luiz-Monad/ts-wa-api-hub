@@ -1,20 +1,20 @@
-import WhatsAppInstance from "../class/instance";
-import { AppType, ReqType } from "../helper/types";
+import WhatsAppInstance from '../class/instance'
+import { AppType, ReqType } from '../helper/types'
 
 interface Instance
 {
-    instances: Record<string, WhatsAppInstance>;
+    instances: Record<string, WhatsAppInstance>
 }
 
 export function initInstanceService(app: AppType) {
-    app.set('instanceService', <Instance> { instances: {} });
+    app.set('instanceService', { instances: {} } as Instance)
 }
 
 export function getInstanceService(app: AppType): Instance {
-    const instanceService: Instance = app.get('instanceService');
-    return instanceService;
+    const instanceService: Instance = app.get('instanceService')
+    return instanceService
 }
 
 export default function getInstanceForReq(req: ReqType): WhatsAppInstance {
-    return getInstanceService(req.app).instances[<string> req.query.key];
+    return getInstanceService(req.app).instances[<string> req.query.key]
 }

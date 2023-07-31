@@ -34,9 +34,7 @@ export const demoteAdmin : ReqHandler = async (req, res) => {
 }
 
 export const listAll : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).getAllGroups(
-        req.query.key
-    )
+    const data = await getInstanceForReq(req).getAllGroups()
     return res.status(201).json({ error: false, data: data })
 }
 
@@ -110,15 +108,17 @@ export const groupUpdateDescription : ReqHandler = async (req, res) => {
 }
 
 export const groupInviteInfo : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).groupGetInviteInfo(
-        req.body.code
-    )
+    // const data = await getInstanceForReq(req).groupGetInviteInfo(
+    //     req.body.code
+    // )
+    const data = {}
     return res.status(201).json({ error: false, data: data })
 }
 
 export const groupJoin : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).groupAcceptInvite(
-        req.body.code
-    )
+    // const data = await getInstanceForReq(req).groupAcceptInvite(
+    //     req.body.code
+    // )
+    const data = {}
     return res.status(201).json({ error: false, data: data })
 }

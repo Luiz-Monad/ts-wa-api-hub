@@ -1,6 +1,6 @@
 import { Document, Collection, MongoClient } from 'mongodb'
 
-import { AppType } from "../helper/types";
+import { AppType } from '../helper/types'
 
 interface Database
 {

@@ -12,7 +12,7 @@ class Session {
     app: AppType
 
     constructor(app: AppType){
-        this.app = app;
+        this.app = app
     }
 
     async restoreSessions() {
@@ -33,7 +33,7 @@ class Session {
                     .toArray(async (err, result) => {
                         if (err) throw err
                         const webhook = !config.webhookEnabled
-                            ? null
+                            ? false
                             : config.webhookEnabled
                         const webhookUrl = !config.webhookUrl
                             ? null

@@ -1,5 +1,5 @@
-import { ReqHandler } from "../helper/types"
-import getInstanceForReq from "../service/instance"
+import { ReqHandler } from '../helper/types'
+import getInstanceForReq from '../service/instance'
 
 export const Text : ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).sendTextMessage(

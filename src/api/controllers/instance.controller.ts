@@ -8,9 +8,9 @@ import getDatabase from '../service/database'
 export const init : ReqHandler = async (req, res) => {
     const key = <string> req.query.key
     const webhook = !req.query.webhook ? false : !!req.query.webhook
-    const webhookUrl = !req.query.webhookUrl ? null : req.query.webhookUrl
+    const webhookUrl = !req.query.webhook ? null : <string> req.query.webhookUrl
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(key, webhook, webhookUrl)
+    const instance = new WhatsAppInstance(req.app, key, webhook, webhookUrl)
     const data = await instance.init()
     let instances = getInstanceService(req.app).instances
     instances[data.key] = instance
@@ -74,7 +74,7 @@ export const info : ReqHandler = async (req, res) => {
 
 export const restore : ReqHandler = async (req, res, next) => {
     try {
-        const session = new Session()
+        const session = new Session(req.app)
         let restoredSessions = await session.restoreSessions()
         return res.json({
             error: false,

@@ -6,7 +6,7 @@ import multer from 'multer'
 
 const router = express.Router()
 const storage = multer.memoryStorage()
-const upload = multer({ storage: storage, inMemory: true }).single('file')
+const upload = multer({ storage: storage }).single('file')
 
 router.route('/text').post(keyVerify, loginVerify, controller.Text)
 router.route('/image').post(keyVerify, loginVerify, upload, controller.Image)

@@ -73,7 +73,6 @@ class WhatsAppInstance {
     authState: AuthState | null = null
     collection: CollectionType | null = null
     allowWebhook: boolean | null = null
-    webhook = undefined
 
     instance = {
         key: this.key,
@@ -81,7 +80,7 @@ class WhatsAppInstance {
         qr: '',
         messages: <WAMessage[]> [],
         qrRetry: 0,
-        customWebhook: '',
+        customWebhook: <string | null> null,
         sock: <WASocket | null> null,
         online: false,
     }
@@ -91,18 +90,18 @@ class WhatsAppInstance {
     })
 
 
-    constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: any) {
+    constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null) {
         this.app = app;
         this.key = key ? key : uuidv4()
-        this.instance.customWebhook = this.webhook ? this.webhook : webhook
+        this.instance.customWebhook = webhook ?? null
         this.allowWebhook = config.webhookEnabled
             ? config.webhookEnabled
             : (allowWebhook ?? null)
         if (this.allowWebhook && this.instance.customWebhook !== null) {
             this.allowWebhook = true
-            this.instance.customWebhook = webhook
+            this.instance.customWebhook = webhook ?? null
             this.axiosInstance = axios.create({
-                baseURL: webhook,
+                ...(webhook ? { baseURL: webhook } : {}),
             })
         }
     }
@@ -732,7 +731,7 @@ class WhatsAppInstance {
                 for (const [key, value] of Object.entries(groups)) {
                     let group = Chats.find((c) => c.id === value.id)
                     if (group) {
-                        let participants = []
+                        let participants: GroupParticipant[] = []
                         for (const [
                             key_participant,
                             participant,

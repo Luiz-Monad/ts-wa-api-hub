@@ -3,8 +3,8 @@ import { AuthenticationCreds } from '@whiskeysockets/baileys'
 import { Curve, signedKeyPair } from '@whiskeysockets/baileys/lib/Utils/crypto'
 import { generateRegistrationId } from '@whiskeysockets/baileys/lib/Utils/generics'
 import { randomBytes } from 'crypto'
-import { CollectionType } from '../service/database'
-import { TypeOfPromise } from './types'
+import { AppType, TypeOfPromise } from './types'
+import getDatabaseService from '../service/database'
 
 const initAuthCreds = () => {
     const identityKey = Curve.generateKeyPair()
@@ -55,7 +55,9 @@ const BufferJSON = {
     },
 }
 
-export default async function useMongoDBAuthState(collection: CollectionType) {
+export default async function useAuthState(app: AppType, key: string) {
+    const db = getDatabaseService(app)
+    const collection = db.collection(key)
     const writeData = (data: any, id: string) => {
         return collection.replaceOne(
             { _id: id },
@@ -75,6 +77,9 @@ export default async function useMongoDBAuthState(collection: CollectionType) {
         try {
             await collection.deleteOne({ _id: id })
         } catch (_a) {}
+    }
+    const dropBobbyTable = async () => {
+        await collection.drop()
     }
     const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds()
     return {
@@ -115,7 +120,10 @@ export default async function useMongoDBAuthState(collection: CollectionType) {
         saveCreds: () => {
             return writeData(creds, 'creds')
         },
+        dropCreds: () => {
+            return dropBobbyTable()
+        },
     }
 }
 
-export type AuthState = TypeOfPromise<ReturnType<typeof useMongoDBAuthState>>
+export type AuthState = TypeOfPromise<ReturnType<typeof useAuthState>>

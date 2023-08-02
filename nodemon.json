@@ -1,6 +1,6 @@
 {
-    "watch": ["src", ".env"],
+    "watch": ["lib", ".env"],
     "ignore": [],
     "ext": "js",
-    "exec": "node src/server.js"
+    "exec": "node lib/server.js"
 }

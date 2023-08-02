@@ -10,9 +10,9 @@ import Chat, { ChatType } from '../models/chat.model'
 import axios from 'axios'
 import config from '../../config/config'
 import downloadMessage from '../helper/downloadMsg'
-import useMongoDBAuthState, { AuthState } from '../helper/mongoAuthState'
-import { AppType, FileType, TypeOfPromise } from '../helper/types'
-import getDatabase, { CollectionType } from '../service/database'
+import useAuthState, { AuthState } from '../helper/baileysAuthState'
+import { AppType, FileType } from '../helper/types'
+import getDatabaseService, { CollectionType } from '../service/database'
 import processMessage, { MediaType } from '../helper/processmessage'
 
 const logger = pino()
@@ -69,14 +69,12 @@ class WhatsAppInstance {
             level: config.log.level,
         }),
     }
-    key = ''
-    authState: AuthState | null = null
-    collection: CollectionType | null = null
+    key: string
+    authState: AuthState = <AuthState> {}
     allowWebhook: boolean | null = null
 
     instance = {
-        key: this.key,
-        chats: <ChatType[]> [],
+        chats: <ChatType[]> {},
         qr: '',
         messages: <WAMessage[]> [],
         qrRetry: 0,
@@ -88,7 +86,6 @@ class WhatsAppInstance {
     axiosInstance = axios.create({
         baseURL: config.webhookUrl,
     })
-
 
     constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null) {
         this.app = app;
@@ -118,10 +115,7 @@ class WhatsAppInstance {
     }
 
     async init() {
-        const db = getDatabase(this.app)
-        this.collection = db.collection(this.key)
-        const { state, saveCreds } = await useMongoDBAuthState(this.collection)
-        this.authState = { state: state, saveCreds: saveCreds }
+        this.authState = await useAuthState(this.app, this.key)
         const socketConfig = {
             auth: this.authState.state,
             browser: <[string, string, string]> Object.values(config.browser),
@@ -129,6 +123,12 @@ class WhatsAppInstance {
         }
         this.instance.sock = makeWASocket(socketConfig)
         this.setHandler()
+        return this
+    }
+
+    async drop() {
+        this.authState = await useAuthState(this.app, this.key)
+        this.authState.dropCreds();
         return this
     }
 
@@ -183,9 +183,8 @@ class WhatsAppInstance {
                 ) {
                     await this.init()
                 } else {
-                    await this.collection?.drop().then((r: any) => {
-                        logger.info('STATE: Droped collection')
-                    })
+                    await this.drop()
+                    logger.info('STATE: Droped collection')
                     this.instance.online = false
                 }
 
@@ -206,9 +205,7 @@ class WhatsAppInstance {
                     )
             } else if (connection === 'open') {
                 if (config.mongoose.enabled) {
-                    let alreadyThere = await Chat.findOne({
-                        key: this.key,
-                    }).exec()
+                    const alreadyThere = await Chat.findOne({ key: this.key })
                     if (!alreadyThere) {
                         const saveChat = new Chat({ key: this.key })
                         await saveChat.save()
@@ -262,15 +259,17 @@ class WhatsAppInstance {
         // on receive all chats
         sock?.ev.on('messaging-history.set', async ({ chats }) => {
             this.instance.chats = []
-            const receivedChats = chats.map((chat: any) => {
+            const receivedChats = chats.map(chat => {
                 return {
                     ...chat,
                     messages: [],
+                    name: chat.name ?? '',
+                    participant: this._toProtoParticipants(chat.participant)
                 }
             })
             this.instance.chats.push(...receivedChats)
-            await this.updateDb(this.instance.chats)
-            await this.updateDbGroupsParticipants()
+            await this._updateDb(this.instance.chats)
+            await this._updateDbGroupsParticipants()
         })
 
         // on receive new chat
@@ -282,7 +281,7 @@ class WhatsAppInstance {
                     ...chat,
                     messages: [],
                     name: chat.name ?? '',
-                    participant: this.toProtoParticipants(chat.participant)
+                    participant: this._toProtoParticipants(chat.participant)
                 }
             })
             this.instance.chats.push(...chats)
@@ -302,7 +301,7 @@ class WhatsAppInstance {
                     ...chat,
                     messages: chat.messages ?? [],
                     name: chat.name ?? '',
-                    participant: this.toProtoParticipants(chat.participant)
+                    participant: this._toProtoParticipants(chat.participant)
                 }
             })
         })
@@ -474,7 +473,7 @@ class WhatsAppInstance {
         sock?.ev.on('groups.update', async (newChat) => {
             //console.log('groups.update')
             //console.log(newChat)
-            this.updateGroupSubjectByApp(newChat)
+            this._updateGroupSubjectByApp(newChat)
             if (
                 ['all', 'groups', 'groups.update'].some((e) =>
                     config.webhookAllowedEvents.includes(e)
@@ -492,7 +491,7 @@ class WhatsAppInstance {
         sock?.ev.on('group-participants.update', async (newChat) => {
             //console.log('group-participants.update')
             //console.log(newChat)
-            this.updateGroupParticipantsByApp(newChat)
+            this._updateGroupParticipantsByApp(newChat)
             if (
                 [
                     'all',
@@ -511,7 +510,7 @@ class WhatsAppInstance {
         })
     }
 
-    toProtoParticipants(parts: proto.IGroupParticipant[] | null | undefined) {
+    _toProtoParticipants(parts: proto.IGroupParticipant[] | null | undefined) {
         const rank = [null, 'admin', 'superadmin']
         return parts?.map(p => ({ id: p.userJid, admin: rank[p.rank ?? 0] }))
     }
@@ -585,7 +584,7 @@ class WhatsAppInstance {
         return data
     }
 
-    async DownloadProfile(of: string) {
+    async downloadProfile(of: string) {
         await this.verifyId(this.getWhatsAppId(of))
         const ppUrl = await this.instance.sock?.profilePictureUrl(
             this.getWhatsAppId(of),
@@ -701,8 +700,8 @@ class WhatsAppInstance {
     // get user or group object from db by id
     async getUserOrGroupById(id: string) {
         try {
-            let Chats = await this.getChat()
-            const group = Chats?.find((c) => c.id === this.getWhatsAppId(id))
+            const chats = await this._getChats()
+            const group = chats?.find((c) => c.id === this.getWhatsAppId(id))
             if (!group)
                 throw new Error(
                     'unable to get group, check if the group exists'
@@ -715,40 +714,37 @@ class WhatsAppInstance {
     }
 
     // Group Methods
-    parseParticipants(users: string[]) {
+    _parseParticipants(users: string[]) {
         return users.map((users) => this.getWhatsAppId(users))
     }
 
-    toParticipants(participants: GroupParticipant[]) {
+    _toParticipants(participants: GroupParticipant[]) {
         return participants.map(p => ({ id: p.id, admin: p.admin ?? null }))
     }
 
-    async updateDbGroupsParticipants() {
+    async _updateDbGroupsParticipants() {
         try {
-            let groups = await this.groupFetchAllParticipating()
-            let Chats = await this.getChat()
-            if (groups && Chats) {
+            const groups = await this.groupFetchAllParticipating()
+            const chats = await this._getChats()
+            if (groups && chats) {
                 for (const [key, value] of Object.entries(groups)) {
-                    let group = Chats.find((c) => c.id === value.id)
+                    const group = chats.find((c) => c.id === value.id)
                     if (group) {
-                        let participants: GroupParticipant[] = []
-                        for (const [
-                            key_participant,
-                            participant,
-                        ] of Object.entries(value.participants)) {
+                        const participants: GroupParticipant[] = []
+                        for (const [key_participant, participant] of Object.entries(value.participants)) {
                             participants.push(participant)
                         }
-                        group.participant = this.toParticipants(participants)
+                        group.participant = this._toParticipants(participants)
                         if (value.creation) {
                             group.creation = value.creation
                         }
                         if (value.subjectOwner) {
                             group.subjectOwner = value.subjectOwner
                         }
-                        Chats.filter((c) => c.id === value.id)[0] = group
+                        chats.filter((c) => c.id === value.id)[0] = group
                     }
                 }
-                await this.updateDb(Chats)
+                await this._updateDb(chats)
             }
         } catch (e) {
             logger.error(e)
@@ -773,7 +769,7 @@ class WhatsAppInstance {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
                 this.getWhatsAppId(id),
-                this.parseParticipants(users),
+                this._parseParticipants(users),
                 'add'
             )
             return res
@@ -790,7 +786,7 @@ class WhatsAppInstance {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
                 this.getWhatsAppId(id),
-                this.parseParticipants(users),
+                this._parseParticipants(users),
                 'promote'
             )
             return res
@@ -807,7 +803,7 @@ class WhatsAppInstance {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
                 this.getWhatsAppId(id),
-                this.parseParticipants(users),
+                this._parseParticipants(users),
                 'demote'
             )
             return res
@@ -821,8 +817,8 @@ class WhatsAppInstance {
     }
 
     async getAllGroups() {
-        let Chats = await this.getChat()
-        return Chats?.filter((c) => c.id.includes('@g.us')).map((data, i) => {
+        const chats = await this._getChats()
+        return chats?.filter((c) => c.id.includes('@g.us')).map((data, i) => {
             return {
                 index: i,
                 name: data.name,
@@ -836,8 +832,8 @@ class WhatsAppInstance {
 
     async leaveGroup(id: string) {
         try {
-            let Chats = await this.getChat()
-            const group = Chats?.find((c) => c.id === id)
+            const chats = await this._getChats()
+            const group = chats?.find((c) => c.id === id)
             if (!group) throw new Error('no group exists')
             return await this.instance.sock?.groupLeave(id)
         } catch (e) {
@@ -848,8 +844,8 @@ class WhatsAppInstance {
 
     async getInviteCodeGroup(id: string) {
         try {
-            let Chats = await this.getChat()
-            const group = Chats?.find((c) => c.id === id)
+            const chats = await this._getChats()
+            const group = chats?.find((c) => c.id === id)
             if (!group)
                 throw new Error(
                     'unable to get invite code, check if the group exists'
@@ -871,40 +867,39 @@ class WhatsAppInstance {
     }
 
     // get Chat object from db
-    async getChat(key = this.key) {
-        let dbResult = await Chat.findOne({ key: key }).exec()
-        let ChatObj = dbResult?.chat
-        return ChatObj
+    async _getChats(key = this.key) {
+        const dbResult = await Chat.findOne({ key: key })
+        return dbResult?.chat
     }
 
     // create new group by application
     async createGroupByApp(newChat: GroupMetadata[]) {
         try {
-            let Chats = await this.getChat()
-            let group = {
+            const chats = await this._getChats()
+            const group = {
                 id: newChat[0].id,
                 name: newChat[0].subject,
-                participant: this.toParticipants(newChat[0].participants),
+                participant: this._toParticipants(newChat[0].participants),
                 messages: [],
                 creation: newChat[0].creation,
                 subjectOwner: newChat[0].subjectOwner,
             }
-            Chats?.push(group)
-            await this.updateDb(Chats)
+            chats?.push(group)
+            await this._updateDb(chats)
         } catch (e) {
             logger.error(e)
             logger.error('Error updating document failed')
         }
     }
 
-    async updateGroupSubjectByApp(newChat: Partial<GroupMetadata>[]) {
+    async _updateGroupSubjectByApp(newChat: Partial<GroupMetadata>[]) {
         //console.log(newChat)
         try {
             if (newChat[0] && newChat[0].subject) {
-                let Chats = await this.getChat()
-                let Chat = Chats?.find((c) => c.id === newChat[0].id)
-                Chat!.name = newChat[0].subject
-                await this.updateDb(Chats)
+                const chats = await this._getChats()
+                const chat = chats?.find((c) => c.id === newChat[0].id)
+                chat!.name = newChat[0].subject
+                await this._updateDb(chats)
             }
         } catch (e) {
             logger.error(e)
@@ -912,13 +907,13 @@ class WhatsAppInstance {
         }
     }
 
-    async updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }
+    async _updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }
     ) {
         //console.log(newChat)
         try {
             if (newChat && newChat.id) {
-                let Chats = await this.getChat()
-                let chat = Chats?.find((c) => c.id === newChat.id)
+                let chats = await this._getChats()
+                let chat = chats?.find((c) => c.id === newChat.id)
                 let is_owner = false
                 if (chat) {
                     if (chat.participant == undefined) {
@@ -939,7 +934,7 @@ class WhatsAppInstance {
                                 is_owner = true
                             }
                             chat.participant = chat.participant.filter(
-                                (p: { id: any }) => p.id != participant
+                                p => p.id != participant
                             )
                         }
                     }
@@ -947,11 +942,11 @@ class WhatsAppInstance {
                         for (const participant of newChat.participants) {
                             if (
                                 chat.participant.filter(
-                                    (p: { id: any }) => p.id == participant
+                                    p => p.id == participant
                                 )[0]
                             ) {
                                 chat.participant.filter(
-                                    (p: { id: any }) => p.id == participant
+                                    p => p.id == participant
                                 )[0].admin = null
                             }
                         }
@@ -960,22 +955,22 @@ class WhatsAppInstance {
                         for (const participant of newChat.participants) {
                             if (
                                 chat.participant.filter(
-                                    (p: { id: any }) => p.id == participant
+                                    p => p.id == participant
                                 )[0]
                             ) {
                                 chat.participant.filter(
-                                    (p: { id: any }) => p.id == participant
+                                    p => p.id == participant
                                 )[0].admin = 'superadmin'
                             }
                         }
                     }
                     if (is_owner) {
-                        Chats = Chats?.filter((c) => c.id !== newChat.id)
+                        chats = chats?.filter((c) => c.id !== newChat.id)
                     } else {
-                        Chats = Chats?.filter((c) => c.id === newChat.id)
-                        Chats![0] = chat
+                        chats = chats?.filter((c) => c.id === newChat.id)
+                        chats![0] = chat
                     }
-                    await this.updateDb(Chats)
+                    await this._updateDb(chats)
                 }
             }
         } catch (e) {
@@ -986,8 +981,7 @@ class WhatsAppInstance {
 
     async groupFetchAllParticipating() {
         try {
-            const result =
-                await this.instance.sock?.groupFetchAllParticipating()
+            const result = await this.instance.sock?.groupFetchAllParticipating()
             return result
         } catch (e) {
             logger.error('Error group fetch all participating failed')
@@ -999,7 +993,7 @@ class WhatsAppInstance {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
                 this.getWhatsAppId(id),
-                this.parseParticipants(users),
+                this._parseParticipants(users),
                 action
             )
             return res
@@ -1069,7 +1063,7 @@ class WhatsAppInstance {
     }
 
     // update db document -> chat
-    async updateDb(object?: ChatType[]) {
+    async _updateDb(object?: ChatType[]) {
         try {
             await Chat.updateOne({ key: this.key }, { chat: object })
         } catch (e) {

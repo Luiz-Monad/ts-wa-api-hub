@@ -6,7 +6,7 @@ interface Instance
     instances: Record<string, WhatsAppInstance>
 }
 
-export function initInstanceService(app: AppType) {
+export async function initInstanceService(app: AppType) {
     app.set('instanceService', { instances: {} } as Instance)
 }
 

@@ -1,5 +1,4 @@
 import dotenv from 'dotenv'
-import mongoose from 'mongoose'
 import pino from 'pino'
 
 dotenv.config()
@@ -9,23 +8,19 @@ import http from 'http'
 import app from './config/express'
 import config from './config/config'
 
-import connectToCluster from './api/helper/connectMongoClient'
 import { ErrHandler } from './api/helper/types'
 
-if (config.mongoose.enabled) {
-    mongoose.set('strictQuery', true);
-    mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-        logger.info('Connected to MongoDB')
-    })
-}
-
+import { initDatabaseService } from './api/service/database'
+import { initInstanceService } from './api/service/instance'
 import { initSessionService } from './api/service/session'
 
 const server = http.createServer(app)
 
 server.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
-    await connectToCluster(app, config.mongoose.url)
+
+    await initDatabaseService(app)
+    await initInstanceService(app)    
     await initSessionService(app, server)
 })
 

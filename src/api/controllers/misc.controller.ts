@@ -10,7 +10,7 @@ export const onWhatsapp : ReqHandler = async (req, res) => {
 }
 
 export const downProfile : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req)?.DownloadProfile(
+    const data = await getInstanceForReq(req)?.downloadProfile(
         <string> req.query.id
     )
     return res.status(201).json({ error: false, data: data })

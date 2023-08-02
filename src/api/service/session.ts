@@ -1,5 +1,5 @@
 import WhatsAppSession from '../class/session'
-import { AppType, ServerType } from '../helper/types'
+import { AppType } from '../helper/types'
 import config from '../../config/config'
 import pino from 'pino'
 
@@ -10,7 +10,7 @@ interface Session
     instance?: WhatsAppSession
 }
 
-export async function initSessionService(app: AppType, server: ServerType) {
+export async function initSessionService(app: AppType, server: any) {
     const session: Session = {}
     if (config.restoreSessionsOnStartup) {
         logger.info(`Restoring Sessions`)

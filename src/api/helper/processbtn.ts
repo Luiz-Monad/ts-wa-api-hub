@@ -6,9 +6,9 @@ export type ButtonDef = {
 }
 
 export type Button = { 
-    quickReplyButton?: { displayText: any }; 
-    callButton?: { displayText: any; phoneNumber: any }; 
-    urlButton?: { displayText: any; url: any } 
+    quickReplyButton?: { displayText: string }; 
+    callButton?: { displayText: string; phoneNumber: string }; 
+    urlButton?: { displayText: string; url: string } 
 }
 
 export default function processButton(buttons?: ButtonDef[]) {

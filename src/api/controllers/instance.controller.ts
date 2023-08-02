@@ -3,7 +3,7 @@ import config from '../../config/config'
 import Session from '../class/session'
 import { ReqHandler } from '../helper/types'
 import getInstanceForReq, { getInstanceService } from '../service/instance'
-import getDatabase from '../service/database'
+import getDatabaseService from '../service/database'
 
 export const init : ReqHandler = async (req, res) => {
     const key = <string> req.query.key
@@ -75,7 +75,7 @@ export const info : ReqHandler = async (req, res) => {
 export const restore : ReqHandler = async (req, res, next) => {
     try {
         const session = new Session(req.app)
-        let restoredSessions = await session.restoreSessions()
+        const restoredSessions = await session.restoreSessions()
         return res.json({
             error: false,
             message: 'All instances restored',
@@ -117,11 +117,10 @@ export const remove : ReqHandler = async (req, res) => {
 }
 
 export const list : ReqHandler = async (req, res) => {
-    let instances = getInstanceService(req.app).instances
 
     if (req.query.active) {
         let instance : string[] = []
-        const db = getDatabase(req.app)
+        const db = getDatabaseService(req.app)
         const result = await db.listCollections().toArray()
         result.forEach((collection) => {
             instance.push(collection.name)
@@ -134,10 +133,11 @@ export const list : ReqHandler = async (req, res) => {
         })
     }
 
-    let instance = Object.keys(instances).map(async (key) =>
+    const instances = getInstanceService(req.app).instances
+    const instance = Object.keys(instances).map(async (key) =>
         instances[key].getInstanceDetail(key)
     )
-    let data = await Promise.all(instance)
+    const data = await Promise.all(instance)
     
     return res.json({
         error: false,

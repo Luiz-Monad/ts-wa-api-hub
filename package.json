@@ -4,8 +4,8 @@
     "description": "whatsapp-api-nodejs is builton top of Baileys-MD.",
     "main": "server.js",
     "scripts": {
-        "start": "node src/server.js",
-        "dev": "nodemon",
+        "start": "yarn build:tsc && node lib/server.js",
+        "build:tsc": "tsc",
         "format:check": "prettier --check .",
         "format:write": "prettier --write .",
         "lint:check": "eslint .",

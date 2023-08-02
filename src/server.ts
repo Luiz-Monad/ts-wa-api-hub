@@ -13,6 +13,8 @@ import { ErrHandler } from './api/helper/types'
 import { initDatabaseService } from './api/service/database'
 import { initInstanceService } from './api/service/instance'
 import { initSessionService } from './api/service/session'
+import { initWebHookService } from './api/service/webhook'
+import { initWebSocketService } from './api/service/websocket'
 
 const server = http.createServer(app)
 
@@ -21,7 +23,9 @@ server.listen(config.port, async () => {
 
     await initDatabaseService(app)
     await initInstanceService(app)    
-    await initSessionService(app, server)
+    await initSessionService(app)
+    await initWebHookService(app, server)
+    await initWebSocketService(app, server)
 })
 
 const exitHandler = () => {

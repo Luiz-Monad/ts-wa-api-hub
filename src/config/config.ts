@@ -30,6 +30,9 @@ const WEBHOOK_BASE64 = !!(process.env.WEBHOOK_BASE64 && process.env.WEBHOOK_BASE
 // allowed events which should be sent to webhook
 const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') || ['all']
 
+// Enable or disable websockets globally on project
+const WEBSOCKET_ENABLED = !!(process.env.WEBSOCKET_ENABLED && process.env.WEBSOCKET_ENABLED === 'true')
+
 // Mark messages as seen
 const MARK_MESSAGES_READ = !!(process.env.MARK_MESSAGES_READ && process.env.MARK_MESSAGES_READ === 'true')
 
@@ -61,6 +64,7 @@ export default {
     webhookEnabled: WEBHOOK_ENABLED,
     webhookUrl: WEBHOOK_URL,
     webhookBase64: WEBHOOK_BASE64,
+    websocketEnabled: WEBSOCKET_ENABLED,
     protectRoutes: PROTECT_ROUTES,
     markMessagesRead: MARK_MESSAGES_READ,
     webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS

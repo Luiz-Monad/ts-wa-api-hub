@@ -7,13 +7,14 @@ import { v4 as uuidv4 } from 'uuid'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import generateVC, { VCardData } from '../helper/genVc'
 import Chat, { ChatType } from '../models/chat.model'
-import axios from 'axios'
 import config from '../../config/config'
 import downloadMessage from '../helper/downloadMsg'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
 import { AppType, FileType } from '../helper/types'
-import getDatabaseService, { CollectionType } from '../service/database'
+import getWebHookService, { WebHook } from '../service/webhook'
+import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
+import axios from 'axios'
 
 const logger = pino()
 
@@ -71,47 +72,31 @@ class WhatsAppInstance {
     }
     key: string
     authState: AuthState = <AuthState> {}
-    allowWebhook: boolean | null = null
+    webHookInstance: WebHook | null = null
+    webSocketInstance: WebSocket | null = null
 
     instance = {
         chats: <ChatType[]> {},
         qr: '',
         messages: <WAMessage[]> [],
         qrRetry: 0,
-        customWebhook: <string | null> null,
         sock: <WASocket | null> null,
         online: false,
     }
 
-    axiosInstance = axios.create({
-        baseURL: config.webhookUrl,
-    })
 
-    constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null) {
+    constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null, allowWebsocket?: boolean) {
         this.app = app;
         this.key = key ? key : uuidv4()
-        this.instance.customWebhook = webhook ?? null
-        this.allowWebhook = config.webhookEnabled
-            ? config.webhookEnabled
-            : (allowWebhook ?? null)
-        if (this.allowWebhook && this.instance.customWebhook !== null) {
-            this.allowWebhook = true
-            this.instance.customWebhook = webhook ?? null
-            this.axiosInstance = axios.create({
-                ...(webhook ? { baseURL: webhook } : {}),
-            })
-        }
+        this.webHookInstance = getWebHookService(this.app)
+        if (allowWebhook) this.webHookInstance = this.webHookInstance.enable(webhook)
+        this.webSocketInstance = getWebSocketService(this.app)
+        if (allowWebsocket) this.webSocketInstance = this.webSocketInstance.enable()
     }
 
-    async SendWebhook(type: string, body: any, key: string) {
-        if (!this.allowWebhook) return
-        this.axiosInstance
-            .post('', {
-                type,
-                body,
-                instanceKey: key,
-            })
-            .catch(() => {})
+    async _sendCallback(type: string, body: any, key: string) {
+        this.webHookInstance?.sendCallback(type, body, key)
+        this.webSocketInstance?.sendCallback(type, body, key)
     }
 
     async init() {
@@ -184,7 +169,7 @@ class WhatsAppInstance {
                     await this.init()
                 } else {
                     await this.drop()
-                    logger.info('STATE: Droped collection')
+                        logger.info('STATE: Droped collection')
                     this.instance.online = false
                 }
 
@@ -196,7 +181,7 @@ class WhatsAppInstance {
                         'connection:close',
                     ].some((e) => config.webhookAllowedEvents.includes(e))
                 )
-                    await this.SendWebhook(
+                    await this._sendCallback(
                         'connection',
                         {
                             connection: connection,
@@ -220,7 +205,7 @@ class WhatsAppInstance {
                         'connection:open',
                     ].some((e) => config.webhookAllowedEvents.includes(e))
                 )
-                    await this.SendWebhook(
+                    await this._sendCallback(
                         'connection',
                         {
                             connection: connection,
@@ -253,7 +238,7 @@ class WhatsAppInstance {
                     config.webhookAllowedEvents.includes(e)
                 )
             )
-                await this.SendWebhook('presence', json, this.key)
+                await this._sendCallback('presence', json, this.key)
         })
 
         // on receive all chats
@@ -395,7 +380,7 @@ class WhatsAppInstance {
                         config.webhookAllowedEvents.includes(e)
                     )
                 )
-                    await this.SendWebhook('message', webhookData, this.key)
+                    await this._sendCallback('message', webhookData, this.key)
             })
         })
         
@@ -413,7 +398,7 @@ class WhatsAppInstance {
                             config.webhookAllowedEvents.includes(e)
                         )
                     )
-                        await this.SendWebhook(
+                        await this._sendCallback(
                             'call_offer',
                             {
                                 id: content.attrs['call-id'],
@@ -436,7 +421,7 @@ class WhatsAppInstance {
                             config.webhookAllowedEvents.includes(e)
                         )
                     )
-                        await this.SendWebhook(
+                        await this._sendCallback(
                             'call_terminate',
                             {
                                 id: content.attrs['call-id'],
@@ -461,7 +446,7 @@ class WhatsAppInstance {
                     config.webhookAllowedEvents.includes(e)
                 )
             )
-                await this.SendWebhook(
+                await this._sendCallback(
                     'group_created',
                     {
                         data: newChat,
@@ -479,7 +464,7 @@ class WhatsAppInstance {
                     config.webhookAllowedEvents.includes(e)
                 )
             )
-                await this.SendWebhook(
+                await this._sendCallback(
                     'group_updated',
                     {
                         data: newChat,
@@ -500,7 +485,7 @@ class WhatsAppInstance {
                     'group-participants.update',
                 ].some((e) => config.webhookAllowedEvents.includes(e))
             )
-                await this.SendWebhook(
+                await this._sendCallback(
                     'group_participants_updated',
                     {
                         data: newChat,
@@ -527,7 +512,9 @@ class WhatsAppInstance {
         return {
             instance_key: key,
             phone_connected: this.instance?.online,
-            webhookUrl: this.instance.customWebhook,
+            webhookEnabled: this.webHookInstance?.allowCallback,
+            webhookUrl: this.webHookInstance?.webHookUrl,
+            websocketEnabled: this.webSocketInstance?.allowCallback,
             user: this.instance?.online ? this.instance.sock?.user : {},
         }
     }

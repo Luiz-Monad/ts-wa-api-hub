@@ -1,0 +1,32 @@
+
+<script type="importmap">
+  {
+    "imports": {
+      "socket.io-client": "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
+    }
+  }
+</script>
+
+<script type="module">
+    import { io } from "socket.io-client";
+
+
+    var settings = {
+        "url": "localhost:3333/instance/init?key=123&token=RANDOM_STRING_HERE",
+        "method": "GET",
+        "timeout": 0,
+    };
+
+    $.ajax(settings).done(function (response) {
+        console.log(response);
+    });
+
+    const socket = io("localhost:3333");
+    socket.on('message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+    });
+
+</script>

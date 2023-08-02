@@ -29,17 +29,9 @@ class Session {
             for await (const key of allCollections) {
                 const query = {}
                 const _ = await db.collection(key).find(query)
-                const webhook = !config.webhookEnabled
-                    ? false
-                    : config.webhookEnabled
-                const webhookUrl = !config.webhookUrl
-                    ? null
-                    : config.webhookUrl
                 const instance = new WhatsAppInstance(
                     this.app,
-                    key,
-                    webhook,
-                    webhookUrl
+                    key
                 )
                 await instance.init()
                 instances[key] = instance

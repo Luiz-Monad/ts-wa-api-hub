@@ -5,10 +5,10 @@ import pino from 'pino'
 dotenv.config()
 const logger = pino()
 
+import http from 'http'
 import app from './config/express'
 import config from './config/config'
 
-import Session from './api/class/session'
 import connectToCluster from './api/helper/connectMongoClient'
 import { ErrHandler } from './api/helper/types'
 
@@ -19,15 +19,14 @@ if (config.mongoose.enabled) {
     })
 }
 
-const server = app.listen(config.port, async () => {
+import { initSessionService } from './api/service/session'
+
+const server = http.createServer(app)
+
+server.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
     await connectToCluster(app, config.mongoose.url)
-    if (config.restoreSessionsOnStartup) {
-        logger.info(`Restoring Sessions`)
-        const session = new Session(app)
-        let restoreSessions = await session.restoreSessions()
-        logger.info(`${restoreSessions.length} Session(s) Restored`)
-    }
+    await initSessionService(app, server)
 })
 
 const exitHandler = () => {

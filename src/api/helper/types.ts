@@ -1,4 +1,4 @@
-import { ErrorRequestHandler, Request, RequestHandler } from "express";
+import { ErrorRequestHandler, Request, RequestHandler } from 'express';
 
 export type TypeOfPromise<P> = P extends Promise<infer T> ? T : never;
 

@@ -1,5 +1,5 @@
-import { ReqHandler } from "../helper/types"
-import getInstanceForReq from "../service/instance"
+import { ReqHandler } from '../helper/types'
+import getInstanceForReq from '../service/instance'
 
 export const onWhatsapp : ReqHandler = async (req, res) => {
     // eslint-disable-next-line no-unsafe-optional-chaining

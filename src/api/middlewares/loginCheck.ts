@@ -1,5 +1,5 @@
-import { ReqHandler } from "../helper/types"
-import getInstanceForReq from "../service/instance"
+import { ReqHandler } from '../helper/types'
+import getInstanceForReq from '../service/instance'
 
 export const loginVerification : ReqHandler = (req, res, next) => {
     const key = req.query['key']?.toString()

@@ -21,14 +21,14 @@ class Session {
         try {
             const instances = getInstanceService(this.app).instances
             const db = getDatabaseService(this.app)
-            const result = await db.listCollections().toArray()
+            const result = await db.listTable()
             result.forEach((collection) => {
                 allCollections.push(collection.name)
             })
 
             for await (const key of allCollections) {
                 const query = {}
-                const _ = await db.collection(key).find(query)
+                const _ = await db.table(key).find(query)
                 const webhook = !config.webhookEnabled
                     ? false
                     : config.webhookEnabled

@@ -12,7 +12,7 @@ import config from '../../config/config'
 import downloadMessage from '../helper/downloadMsg'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
 import { AppType, FileType } from '../helper/types'
-import getDatabaseService, { CollectionType } from '../service/database'
+import getDatabaseService from '../service/database'
 import processMessage, { MediaType } from '../helper/processmessage'
 
 const logger = pino()
@@ -71,6 +71,7 @@ class WhatsAppInstance {
     }
     key: string
     authState: AuthState = <AuthState> {}
+    db: Database = <Database> {}
     allowWebhook: boolean | null = null
 
     instance = {
@@ -100,7 +101,7 @@ class WhatsAppInstance {
             this.axiosInstance = axios.create({
                 ...(webhook ? { baseURL: webhook } : {}),
             })
-        }
+    }
     }
 
     async SendWebhook(type: string, body: any, key: string) {
@@ -115,6 +116,7 @@ class WhatsAppInstance {
     }
 
     async init() {
+        this.db = getDatabaseService(this.app)
         this.authState = await useAuthState(this.app, this.key)
         const socketConfig = {
             auth: this.authState.state,
@@ -184,7 +186,7 @@ class WhatsAppInstance {
                     await this.init()
                 } else {
                     await this.drop()
-                    logger.info('STATE: Droped collection')
+                        logger.info('STATE: Droped collection')
                     this.instance.online = false
                 }
 
@@ -204,10 +206,10 @@ class WhatsAppInstance {
                         this.key
                     )
             } else if (connection === 'open') {
-                if (config.mongoose.enabled) {
-                    const alreadyThere = await Chat.findOne({ key: this.key })
+                if (config.database.enabled) {
+                    const alreadyThere = await this.db.Chat.findOne({ key: this.key })
                     if (!alreadyThere) {
-                        const saveChat = new Chat({ key: this.key })
+                        const saveChat = this.db.Chat.record({ key: this.key })
                         await saveChat.save()
                     }
                 }
@@ -517,7 +519,7 @@ class WhatsAppInstance {
  
     async deleteInstance(key: string) {
         try {
-            await Chat.findOneAndDelete({ key: key })
+            await this.db.Chat.findOneAndDelete({ key: key })
         } catch (e) {
             logger.error('Error updating document failed')
         }
@@ -868,7 +870,7 @@ class WhatsAppInstance {
 
     // get Chat object from db
     async _getChats(key = this.key) {
-        const dbResult = await Chat.findOne({ key: key })
+        const dbResult = await this.db.Chat.findOne({ key: key })
         return dbResult?.chat
     }
 
@@ -1065,7 +1067,7 @@ class WhatsAppInstance {
     // update db document -> chat
     async _updateDb(object?: ChatType[]) {
         try {
-            await Chat.updateOne({ key: this.key }, { chat: object })
+            await this.db.Chat.updateOne({ key: this.key }, { chat: object })
         } catch (e) {
             logger.error('Error updating document failed')
         }

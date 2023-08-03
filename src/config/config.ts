@@ -1,39 +1,58 @@
-
-// Port number
-const PORT = process.env.PORT || '3333'
+// ==================================
+// SECURITY CONFIGURATION
+// ==================================
 const TOKEN = process.env.TOKEN || ''
 const PROTECT_ROUTES = !!(process.env.PROTECT_ROUTES && process.env.PROTECT_ROUTES === 'true')
 
-const RESTORE_SESSIONS_ON_START_UP = !!(process.env.RESTORE_SESSIONS_ON_START_UP && process.env.RESTORE_SESSIONS_ON_START_UP === 'true')
-
+// ==================================
+// APPLICATION CONFIGURATION
+// ==================================
+const PORT = process.env.PORT || '3333'
 const APP_URL = process.env.APP_URL || false
-
 const LOG_LEVEL = process.env.LOG_LEVEL
 
+// ==================================
+// INSTANCE CONFIGURATION
+// ==================================
 const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 2
+const RESTORE_SESSIONS_ON_START_UP = !!(process.env.RESTORE_SESSIONS_ON_START_UP && process.env.RESTORE_SESSIONS_ON_START_UP === 'true')
 
+// ==================================
+// BROWSER CONFIGURATION
+// ==================================
 const CLIENT_PLATFORM = process.env.CLIENT_PLATFORM || 'Whatsapp MD'
 const CLIENT_BROWSER = process.env.CLIENT_BROWSER || 'Chrome'
 const CLIENT_VERSION = process.env.CLIENT_VERSION || '4.0.0'
 
-type DATABASE_KIND_TYPE = 'mongodb' | 'localfs' | 'azuretable'
-
-// Enable or disable storage
+// ==================================
+// DATABASE CONFIGURATION
+// ==================================
+// Enable or disable storage alltogether
 const DATABASE_ENABLED = !!(process.env.DATABASE_ENABLED && process.env.DATABASE_ENABLED === 'true')
-// What kind of storage to use ('localfs' | 'azuretable' | 'mongodb')
+// What kind of storage to use:
+type DATABASE_KIND_TYPE = 'mongodb' | 'localfs' | 'azuretable'
 const DATABASE_KIND = <DATABASE_KIND_TYPE> process.env.DATABASE_KIND || 'localfs'
 
-// URL of the file system storage
+// LOCALFS CONFIGURATION
+// ----------------------------------
+// Path of the file system storage
 const LOCALFS_PATH = process.env.LOCALFS_PATH || 'tmp'
 
+// AZURETABLE CONFIGURATION
+// ----------------------------------
 // URL of the Azure Table
 const AZURETABLE_URL = process.env.AZURETABLE_URL || 'https://storageaccount.core.windows.net'
 
+// MONGODB CONFIGURATION
+// ----------------------------------
 // Enable or disable Mongo DB
 const MONGODB_ENABLED = !!(process.env.MONGODB_ENABLED && process.env.MONGODB_ENABLED === 'true')
 // URL of the Mongo DB
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/WhatsAppInstance'
 
+// ==================================
+// WEBHOOK CONFIGURATION
+// ==================================
 // Enable or disable webhook globally on project
 const WEBHOOK_ENABLED = !!(process.env.WEBHOOK_ENABLED && process.env.WEBHOOK_ENABLED === 'true')
 // Webhook URL
@@ -43,22 +62,32 @@ const WEBHOOK_BASE64 = !!(process.env.WEBHOOK_BASE64 && process.env.WEBHOOK_BASE
 // allowed events which should be sent to webhook
 const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') || ['all']
 
+// ==================================
+// WEBSOCKET CONFIGURATION
+// ==================================
 // Enable or disable websockets globally on project
 const WEBSOCKET_ENABLED = !!(process.env.WEBSOCKET_ENABLED && process.env.WEBSOCKET_ENABLED === 'true')
 
+// ==================================
+// MESSAGE CONFIGURATION
+// ==================================
 // Mark messages as seen
 const MARK_MESSAGES_READ = !!(process.env.MARK_MESSAGES_READ && process.env.MARK_MESSAGES_READ === 'true')
 
+// ==================================
+// EXPORT
+// ==================================
 export default {
     port: PORT,
     token: TOKEN,
-    restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
     appUrl: APP_URL,
     log: {
         level: LOG_LEVEL,
     },
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
+        restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
+        markMessagesRead: MARK_MESSAGES_READ,        
     },
     database: {
         enabled: MONGODB_ENABLED || DATABASE_ENABLED,
@@ -74,7 +103,7 @@ export default {
         options: {
         }
     },
-    mongoose: {
+    mongodb: {
         url: MONGODB_URL,
         options: {
             // useCreateIndex: true,
@@ -90,8 +119,7 @@ export default {
     webhookEnabled: WEBHOOK_ENABLED,
     webhookUrl: WEBHOOK_URL,
     webhookBase64: WEBHOOK_BASE64,
+    webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS,
     websocketEnabled: WEBSOCKET_ENABLED,
     protectRoutes: PROTECT_ROUTES,
-    markMessagesRead: MARK_MESSAGES_READ,
-    webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS
 }

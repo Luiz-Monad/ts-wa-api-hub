@@ -85,8 +85,8 @@ class MongoDatabase extends Database {
 
 export default async function connectMongoClient(app: AppType) {
     const logger = pino()
-    const uri = config.mongoose.url
-    const options = config.mongoose.options
+    const uri = config.mongodb.url
+    const options = config.mongodb.options
     
     try {
         const mongoClient = new MongoClient(uri, options)

@@ -316,7 +316,7 @@ class WhatsAppInstance {
             if (m.type !== 'notify') return
 
             // https://adiwajshing.github.io/Baileys/#reading-messages
-            if (config.markMessagesRead) {
+            if (config.instance.markMessagesRead) {
                 const unreadMessages = m.messages.map((msg) => {
                     return {
                         remoteJid: msg.key.remoteJid,

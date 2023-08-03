@@ -9,7 +9,8 @@ const PROTECT_ROUTES = !!(process.env.PROTECT_ROUTES && process.env.PROTECT_ROUT
 // ==================================
 const PORT = process.env.PORT || '3333'
 const APP_URL = process.env.APP_URL || false
-const LOG_LEVEL = process.env.LOG_LEVEL
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
+const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || true
 
 // ==================================
 // INSTANCE CONFIGURATION
@@ -83,6 +84,7 @@ export default {
     appUrl: APP_URL,
     log: {
         level: LOG_LEVEL,
+        httpLevel: HTTP_LOG_LEVEL,
     },
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,

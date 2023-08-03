@@ -10,9 +10,13 @@ import config from './config'
 exceptionHandler.handle()
 const app = express()
 
-app.options('*', cors())
+if (!config.protectRoutes) {
+    app.options('*', cors())
+}
 
-app.use(morgan('common'));
+if (config.log.httpLevel) {
+    app.use(morgan('common'));
+}
 
 app.use(express.json())
 app.use(express.json({ limit: '50mb' }))

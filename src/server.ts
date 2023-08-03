@@ -10,6 +10,7 @@ import config from './config/config'
 
 import { ErrHandler } from './api/helper/types'
 
+import { initOpenApiService } from './api/service/oas'
 import { initDatabaseService } from './api/service/database'
 import { initInstanceService } from './api/service/instance'
 import { initSessionService } from './api/service/session'
@@ -22,6 +23,7 @@ const server = http.createServer(app)
 server.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
 
+    await initOpenApiService(app)
     await initDatabaseService(app)
     await initInstanceService(app)
     await initSessionService(app)

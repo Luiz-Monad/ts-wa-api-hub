@@ -12,6 +12,7 @@ const APP_URL = process.env.APP_URL || false
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
 const WA_LOG_LEVEL = process.env.WA_LOG_LEVEL || 'info'
 const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || 'info'
+const OPENAPI_SCHEMA = !!(process.env.OPENAPI_SCHEMA && process.env.OPENAPI_SCHEMA === 'true')
 
 // ==================================
 // INSTANCE CONFIGURATION
@@ -34,7 +35,7 @@ const CLIENT_VERSION = process.env.CLIENT_VERSION || '4.0.0'
 const DATABASE_ENABLED = !!(process.env.DATABASE_ENABLED && process.env.DATABASE_ENABLED === 'true')
 // What kind of storage to use:
 type DATABASE_KIND_TYPE = 'mongodb' | 'localfs' | 'azuretable'
-const DATABASE_KIND = <DATABASE_KIND_TYPE>process.env.DATABASE_KIND || 'localfs'
+const DATABASE_KIND = <DATABASE_KIND_TYPE> process.env.DATABASE_KIND || 'localfs'
 
 // LOCALFS CONFIGURATION
 // ----------------------------------
@@ -95,7 +96,7 @@ export default {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
         maxRetryInit: INSTANCE_MAX_RETRY_INIT,
         restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
-        markMessagesRead: MARK_MESSAGES_READ,
+        markMessagesRead: MARK_MESSAGES_READ,        
     },
     database: {
         enabled: MONGODB_ENABLED || DATABASE_ENABLED,
@@ -129,4 +130,5 @@ export default {
     websocketEnabled: WEBSOCKET_ENABLED,
     websocketAllowedEvents: WEBSOCKET_ALLOWED_EVENTS,
     protectRoutes: PROTECT_ROUTES,
+    openapiSchema: OPENAPI_SCHEMA,
 }

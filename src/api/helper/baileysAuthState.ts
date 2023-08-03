@@ -57,9 +57,9 @@ const BufferJSON = {
 
 export default async function useAuthState(app: AppType, key: string) {
     const db = getDatabaseService(app)
-    const collection = db.collection(key)
+    const table = db.table(key)
     const writeData = (data: any, id: string) => {
-        return collection.replaceOne(
+        return table.replaceOne(
             { _id: id },
             JSON.parse(JSON.stringify(data, BufferJSON.replacer)),
             { upsert: true }
@@ -67,7 +67,7 @@ export default async function useAuthState(app: AppType, key: string) {
     }
     const readData = async (id: string) => {
         try {
-            const data = JSON.stringify(await collection.findOne({ _id: id }))
+            const data = JSON.stringify(await table.findOne({ _id: id }))
             return JSON.parse(data, BufferJSON.reviver)
         } catch (error) {
             return null
@@ -75,11 +75,11 @@ export default async function useAuthState(app: AppType, key: string) {
     }
     const removeData = async (id: string) => {
         try {
-            await collection.deleteOne({ _id: id })
+            await table.deleteOne({ _id: id })
         } catch (_a) {}
     }
     const dropBobbyTable = async () => {
-        await collection.drop()
+        await table.drop()
     }
     const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds()
     return {

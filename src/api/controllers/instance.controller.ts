@@ -122,9 +122,9 @@ export const list : ReqHandler = async (req, res) => {
     if (req.query.active) {
         let instance : string[] = []
         const db = getDatabaseService(req.app)
-        const result = await db.listCollections().toArray()
-        result.forEach((collection) => {
-            instance.push(collection.name)
+        const result = await db.listTable()
+        result.forEach((table) => {
+            instance.push(table.name)
         })
 
         return res.json({

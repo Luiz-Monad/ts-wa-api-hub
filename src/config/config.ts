@@ -16,6 +16,19 @@ const CLIENT_PLATFORM = process.env.CLIENT_PLATFORM || 'Whatsapp MD'
 const CLIENT_BROWSER = process.env.CLIENT_BROWSER || 'Chrome'
 const CLIENT_VERSION = process.env.CLIENT_VERSION || '4.0.0'
 
+type DATABASE_KIND_TYPE = 'mongodb' | 'localfs' | 'azuretable'
+
+// Enable or disable storage
+const DATABASE_ENABLED = !!(process.env.DATABASE_ENABLED && process.env.DATABASE_ENABLED === 'true')
+// What kind of storage to use ('localfs' | 'azuretable' | 'mongodb')
+const DATABASE_KIND = <DATABASE_KIND_TYPE> process.env.DATABASE_KIND || 'localfs'
+
+// URL of the file system storage
+const LOCALFS_PATH = process.env.LOCALFS_PATH || 'tmp'
+
+// URL of the Azure Table
+const AZURETABLE_URL = process.env.AZURETABLE_URL || 'https://storageaccount.core.windows.net'
+
 // Enable or disable Mongo DB
 const MONGODB_ENABLED = !!(process.env.MONGODB_ENABLED && process.env.MONGODB_ENABLED === 'true')
 // URL of the Mongo DB
@@ -47,8 +60,21 @@ export default {
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
     },
+    database: {
+        enabled: MONGODB_ENABLED || DATABASE_ENABLED,
+        kind: MONGODB_ENABLED ? 'mongodb' : DATABASE_KIND,
+    },
+    localfs: {
+        path: LOCALFS_PATH,
+        options: {
+        }
+    },
+    azuretable: {
+        url: AZURETABLE_URL,
+        options: {
+        }
+    },
     mongoose: {
-        enabled: MONGODB_ENABLED,
         url: MONGODB_URL,
         options: {
             // useCreateIndex: true,

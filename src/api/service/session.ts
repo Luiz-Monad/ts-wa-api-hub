@@ -13,7 +13,7 @@ interface Session
 export async function initSessionService(app: AppType) {
     const session: Session = {}
     if (config.instance.restoreSessionsOnStartup) {
-        logger.info(`Restoring Sessions`)
+        logger.info('Restoring Sessions')
         session.instance = new WhatsAppSession(app)
         const restoreSessions = await session.instance.restoreSessions()
         logger.info(`${restoreSessions.length} Session(s) Restored`)

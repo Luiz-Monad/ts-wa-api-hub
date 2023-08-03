@@ -1,6 +1,9 @@
 import { AppType, ServerType } from '../helper/types'
 import axios, { AxiosInstance } from 'axios'
 import config from '../../config/config'
+import pino from 'pino'
+
+const logger = pino()
 
 export class WebHook {
     webHookUrl: string | null
@@ -38,6 +41,7 @@ export async function initWebHookService(app: AppType, server: ServerType) {
     const allow = config.webhookEnabled
     const webhookUrl = config.webhookUrl ?? null
     app.set('WebHookService', new WebHook(webhookUrl, allow));
+    if (allow) logger.info(`Using WebHooks service at ${webhookUrl}`)
 }
 
 export default function getWebHookService(app: AppType): WebHook {

@@ -1,6 +1,9 @@
 import { AppType, ServerType } from '../helper/types'
 import { Server } from 'socket.io'
 import config from '../../config/config'
+import pino from 'pino'
+
+const logger = pino()
 
 export class WebSocket {
     appServer: ServerType
@@ -31,6 +34,7 @@ export class WebSocket {
 export async function initWebSocketService(app: AppType, server: ServerType) {
     const allow = config.websocketEnabled
     app.set('WebSocketService', new WebSocket(server, allow));
+    if (allow) logger.info('Using WebSocket service')
 }
 
 export default function getWebSocketService(app: AppType): WebSocket {

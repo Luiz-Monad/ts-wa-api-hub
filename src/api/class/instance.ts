@@ -172,7 +172,7 @@ class WhatsAppInstance {
                     await this.init()
                 } else {
                     await this.drop()
-                    logger.info('STATE: Droped collection')
+                    logger.info('STATE: Dropped collection')
                     this.instance.online = false
                 }
 

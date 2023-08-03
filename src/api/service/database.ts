@@ -16,9 +16,11 @@ export async function initDatabaseService(app: AppType) {
             break
         case 'localfs':
             database = await connectFileSystemClient(app)
+            break
     }
-
     if (!database) return
+
+    logger.info(`Database enabled: ${config.database.kind}`)
     app.set('databaseService', database)
 }
 

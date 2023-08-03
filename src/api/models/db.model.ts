@@ -1,10 +1,12 @@
 import Chat from './chat.model';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 export type Keyed<T> = Partial<T> & ({
     key: string
 } | { 
     _id: string 
-}) | {}
+} | {})
 
 export interface Value<T> {
     value: T

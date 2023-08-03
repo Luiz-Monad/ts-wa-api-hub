@@ -26,6 +26,13 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "yarn: start",
+		},
+		{
+			"type": "shell",
+			"command": "yarn run lint:check",			
+			"group": "build",
+			"problemMatcher": [],
+			"label": "yarn: lint:check",
 		}
 	]
 }

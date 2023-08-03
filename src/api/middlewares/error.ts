@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import APIError from '../../api/errors/api.error'
 import { ErrHandler, ReqHandler } from '../helper/types'
 

@@ -1,0 +1,23 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "prettier",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "env": {
+        "es2020": true,
+        "node": true
+    },
+    "rules": {
+        "no-empty": "off",
+        "prefer-const": "warn",
+        "no-unused-vars": "warn", 
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-unused-vars": "warn"
+    }
+}

@@ -120,6 +120,7 @@ class FsDatabase extends Database {
     directory: string
     Chat: Table<Chat>
     
+    // eslint-disable-next-line @typescript-eslint/ban-types
     constructor (directory: string, options: {}) {
         super()
         this.directory = directory

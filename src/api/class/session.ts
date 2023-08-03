@@ -1,4 +1,3 @@
-/* eslint-disable no-unsafe-optional-chaining */
 import WhatsAppInstance from '../class/instance'
 import pino from 'pino'
 import getDatabaseService from '../service/database'

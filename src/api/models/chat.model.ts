@@ -1,4 +1,3 @@
-import Table from './db.model';
 
 export interface ChatParticipant {
     id: string;

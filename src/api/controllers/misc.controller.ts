@@ -2,7 +2,6 @@ import { ReqHandler } from '../helper/types'
 import getInstanceForReq from '../service/instance'
 
 export const onWhatsapp : ReqHandler = async (req, res) => {
-    // eslint-disable-next-line no-unsafe-optional-chaining
     const data = await getInstanceForReq(req)?.verifyId(
         getInstanceForReq(req)?.getWhatsAppId(<string> req.query.id)
     )
@@ -24,7 +23,7 @@ export const getStatus : ReqHandler = async (req, res) => {
 }
 
 export const blockUser : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req)?.blockUnblock(
+    const _ = await getInstanceForReq(req)?.blockUnblock(
         <string> req.query.id,
         <'block' | 'unblock'> <string> req.query.block_status
     )

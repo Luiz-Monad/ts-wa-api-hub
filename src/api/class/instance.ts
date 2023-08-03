@@ -1,4 +1,3 @@
-/* eslint-disable no-unsafe-optional-chaining */
 import QRCode from 'qrcode'
 import pino from 'pino'
 import { Boom } from '@hapi/boom'
@@ -6,7 +5,7 @@ import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, default a
 import { v4 as uuidv4 } from 'uuid'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import generateVC, { VCardData } from '../helper/genVc'
-import Chat, { ChatType } from '../models/chat.model'
+import { ChatType } from '../models/chat.model'
 import config from '../../config/config'
 import downloadMessage from '../helper/downloadMsg'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
@@ -500,7 +499,7 @@ class WhatsAppInstance {
 
     _toProtoParticipants(parts: proto.IGroupParticipant[] | null | undefined) {
         const rank = [null, 'admin', 'superadmin']
-        return parts?.map(p => ({ id: p.userJid, admin: rank[p.rank ?? 0] }))
+        return parts && parts.map(p => ({ id: p.userJid, admin: rank[p.rank ?? 0] })) || undefined
     }
  
     async deleteInstance(key: string) {
@@ -529,7 +528,7 @@ class WhatsAppInstance {
 
     async verifyId(id: string) {
         if (id.includes('@g.us')) return true
-        const [result] = await this.instance.sock?.onWhatsApp(id)!
+        const [result] = await this.instance.sock?.onWhatsApp(id) ?? []
         if (result?.exists) return true
         throw new Error('no account exists')
     }
@@ -903,7 +902,7 @@ class WhatsAppInstance {
         try {
             if (newChat && newChat.id) {
                 let chats = await this._getChats()
-                let chat = chats?.find((c) => c.id === newChat.id)
+                const chat = chats?.find((c) => c.id === newChat.id)
                 let is_owner = false
                 if (chat) {
                     if (chat.participant == undefined) {

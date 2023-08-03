@@ -1,9 +1,9 @@
-const request = require('supertest')
-const assert = require('assert')
-const app = require('../src/server')
-const { protectRoutes } = require('../src/config/config')
+import request from 'supertest'
+import assert from 'assert'
+import app from '../src/server'
+import config from '../src/config/config'
 
-if (protectRoutes) {
+if (config.protectRoutes) {
     describe('instance endpoints', () => {
         it('should fail with no bearer token is present', (done) => {
             request(app)

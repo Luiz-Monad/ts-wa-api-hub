@@ -22,7 +22,7 @@ server.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
 
     await initDatabaseService(app)
-    await initInstanceService(app)    
+    await initInstanceService(app)
     await initSessionService(app)
     await initWebHookService(app, server)
     await initWebSocketService(app, server)

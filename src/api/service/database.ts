@@ -19,7 +19,7 @@ export async function initDatabaseService(app: AppType) {
     }
 
     if (!database) return
-    app.set('databaseService', database)   
+    app.set('databaseService', database)
 }
 
 export default function getDatabaseService(app: AppType): Database {

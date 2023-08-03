@@ -15,6 +15,7 @@ import getDatabaseService from '../service/database'
 import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
+import Database from '../models/db.model'
 import axios from 'axios'
 
 const logger = pino()
@@ -74,7 +75,6 @@ class WhatsAppInstance {
     key: string
     authState: AuthState = <AuthState> {}
     db: Database = <Database> {}
-    allowWebhook: boolean | null = null
     webHookInstance: WebHook | null = null
     webSocketInstance: WebSocket | null = null
 
@@ -86,7 +86,6 @@ class WhatsAppInstance {
         sock: <WASocket | null> null,
         online: false,
     }
-
 
     constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null, allowWebsocket?: boolean) {
         this.app = app;
@@ -173,7 +172,7 @@ class WhatsAppInstance {
                     await this.init()
                 } else {
                     await this.drop()
-                        logger.info('STATE: Droped collection')
+                    logger.info('STATE: Droped collection')
                     this.instance.online = false
                 }
 

@@ -1,7 +1,6 @@
 /* eslint-disable no-unsafe-optional-chaining */
 import WhatsAppInstance from '../class/instance'
 import pino from 'pino'
-import config from '../../config/config'
 import getDatabaseService from '../service/database'
 import { AppType } from '../helper/types'
 import { getInstanceService } from '../service/instance'

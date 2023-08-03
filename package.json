@@ -6,7 +6,7 @@
     "scripts": {
         "start": "yarn build:tsc && yarn build:ejs && node lib/server.js",
         "build:tsc": "tsc",
-        "build:ejs": "copyfiles -u 1 \"./src/api/views/**/*.ejs\" \"./lib/api/views\"",
+        "build:ejs": "copyfiles -u 1 \"./src/api/views/**/*.ejs\" \"./lib\"",
         "format:check": "prettier --check .",
         "format:write": "prettier --write .",
         "lint:check": "eslint .",

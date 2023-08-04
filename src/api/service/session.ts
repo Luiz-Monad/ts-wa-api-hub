@@ -5,8 +5,7 @@ import pino from 'pino'
 
 const logger = pino()
 
-interface Session
-{
+interface Session {
     instance?: WhatsAppSession
 }
 

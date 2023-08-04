@@ -9,13 +9,13 @@ const logger = pino()
 class Session {
     app: AppType
 
-    constructor(app: AppType){
+    constructor(app: AppType) {
         this.app = app
     }
 
     async restoreSessions() {
-        let restoredSessions : string[] = []
-        let allCollections : string[] = []
+        let restoredSessions: string[] = []
+        let allCollections: string[] = []
         try {
             const instances = getInstanceService(this.app).instances
             const db = getDatabaseService(this.app)
@@ -27,10 +27,7 @@ class Session {
             for await (const key of allCollections) {
                 const query = {}
                 const _ = await db.table(key).find(query)
-                const instance = new WhatsAppInstance(
-                    this.app,
-                    key
-                )
+                const instance = new WhatsAppInstance(this.app, key)
                 await instance.init()
                 instances[key] = instance
                 restoredSessions.push(key)

@@ -39,7 +39,7 @@ const exitHandler = () => {
     }
 }
 
-const unexpectedErrorHandler : ErrHandler = (error) => {
+const unexpectedErrorHandler: ErrHandler = (error) => {
     logger.error(error)
     exitHandler()
 }

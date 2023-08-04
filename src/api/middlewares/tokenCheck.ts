@@ -1,7 +1,7 @@
 import config from '../../config/config'
 import { ReqHandler } from '../helper/types'
 
-export const tokenVerification : ReqHandler = (req, res, next) => {
+export const tokenVerification: ReqHandler = (req, res, next) => {
     const bearer = req.headers.authorization
     const token = bearer?.slice(7)?.toString()
     if (!token) {

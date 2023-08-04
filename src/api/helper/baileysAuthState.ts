@@ -92,10 +92,7 @@ export default async function useAuthState(app: AppType, key: string) {
                         ids.map(async (id) => {
                             let value = await readData(`${type}-${id}`)
                             if (type === 'app-state-sync-key') {
-                                value =
-                                    proto.Message.AppStateSyncKeyData.fromObject(
-                                        data
-                                    )
+                                value = proto.Message.AppStateSyncKeyData.fromObject(data)
                             }
                             data[id] = value
                         })
@@ -108,9 +105,7 @@ export default async function useAuthState(app: AppType, key: string) {
                         for (const id of Object.keys(data[category])) {
                             const value = data[category][id]
                             const key = `${category}-${id}`
-                            tasks.push(
-                                value ? writeData(value, key) : removeData(key)
-                            )
+                            tasks.push(value ? writeData(value, key) : removeData(key))
                         }
                     }
                     await Promise.all(tasks)

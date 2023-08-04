@@ -1,14 +1,13 @@
-
 export type ButtonDef = {
-    type: string;
-    title: string;
-    payload: string; 
+    type: string
+    title: string
+    payload: string
 }
 
-export type Button = { 
-    quickReplyButton?: { displayText: string }; 
-    callButton?: { displayText: string; phoneNumber: string }; 
-    urlButton?: { displayText: string; url: string } 
+export type Button = {
+    quickReplyButton?: { displayText: string }
+    callButton?: { displayText: string; phoneNumber: string }
+    urlButton?: { displayText: string; url: string }
 }
 
 export default function processButton(buttons?: ButtonDef[]) {

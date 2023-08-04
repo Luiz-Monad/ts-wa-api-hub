@@ -1,8 +1,7 @@
-
 export interface VCardData {
-    fullName: string;
-    organization: string;
-    phoneNumber: string;
+    fullName: string
+    organization: string
+    phoneNumber: string
 }
 
 export default function generateVC(data: VCardData) {

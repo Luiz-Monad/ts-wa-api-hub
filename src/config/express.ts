@@ -15,7 +15,7 @@ if (!config.protectRoutes) {
 }
 
 if (config.log.httpLevel) {
-    app.use(morgan('common'));
+    app.use(morgan('common'))
 }
 
 app.use(express.json())

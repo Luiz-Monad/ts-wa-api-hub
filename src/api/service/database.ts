@@ -10,7 +10,7 @@ const logger = pino()
 export async function initDatabaseService(app: AppType) {
     let database: Database | null = null
 
-    switch (config.database.kind)  {
+    switch (config.database.kind) {
         case 'mongodb':
             database = await connectMongoClient(app)
             break

@@ -1,8 +1,7 @@
 import WhatsAppInstance from '../class/instance'
 import { AppType, ReqType } from '../helper/types'
 
-interface Instance
-{
+interface Instance {
     instances: Record<string, WhatsAppInstance>
 }
 
@@ -16,5 +15,5 @@ export function getInstanceService(app: AppType): Instance {
 }
 
 export default function getInstanceForReq(req: ReqType): WhatsAppInstance {
-    return getInstanceService(req.app).instances[<string> req.query.key]
+    return getInstanceService(req.app).instances[<string>req.query.key]
 }

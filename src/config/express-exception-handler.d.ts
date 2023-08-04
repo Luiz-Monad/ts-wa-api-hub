@@ -1,2 +1,1 @@
-
-declare module 'express-exception-handler';
+declare module 'express-exception-handler'

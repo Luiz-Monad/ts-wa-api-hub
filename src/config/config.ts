@@ -32,7 +32,7 @@ const CLIENT_VERSION = process.env.CLIENT_VERSION || '4.0.0'
 const DATABASE_ENABLED = !!(process.env.DATABASE_ENABLED && process.env.DATABASE_ENABLED === 'true')
 // What kind of storage to use:
 type DATABASE_KIND_TYPE = 'mongodb' | 'localfs' | 'azuretable'
-const DATABASE_KIND = <DATABASE_KIND_TYPE> process.env.DATABASE_KIND || 'localfs'
+const DATABASE_KIND = <DATABASE_KIND_TYPE>process.env.DATABASE_KIND || 'localfs'
 
 // LOCALFS CONFIGURATION
 // ----------------------------------
@@ -97,13 +97,11 @@ export default {
     },
     localfs: {
         path: LOCALFS_PATH,
-        options: {
-        }
+        options: {},
     },
     azuretable: {
         url: AZURETABLE_URL,
-        options: {
-        }
+        options: {},
     },
     mongodb: {
         url: MONGODB_URL,

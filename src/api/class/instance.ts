@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import pino from 'pino'
 import { Boom } from '@hapi/boom'
-import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, default as makeWASocket, proto } from '@whiskeysockets/baileys'
+import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, default as makeWASocket } from '@whiskeysockets/baileys'
 import { v4 as uuidv4 } from 'uuid'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import generateVC, { VCardData } from '../helper/genVc'
@@ -38,12 +38,12 @@ export interface ButtonMessage {
     footerText?: string
 }
 
-export interface ListMessage { 
-    text: string 
+export interface ListMessage {
+    text: string
     sections?: any
     buttonText?: string
     description?: string
-    title?: string 
+    title?: string
 }
 
 export interface MediaButtonMessage {
@@ -56,10 +56,10 @@ export interface MediaButtonMessage {
 }
 
 export interface MessageKey {
-    remoteJid?: (string|null);
-    fromMe?: (boolean|null);
-    id?: (string|null);
-    participant?: (string|null);
+    remoteJid?: string | null
+    fromMe?: boolean | null
+    id?: string | null
+    participant?: string | null
 }
 
 class WhatsAppInstance {
@@ -72,22 +72,22 @@ class WhatsAppInstance {
         }),
     }
     key: string
-    authState: AuthState = <AuthState> {}
-    db: Database = <Database> {}
+    authState: AuthState = <AuthState>{}
+    db: Database = <Database>{}
     webHookInstance: WebHook | null = null
     webSocketInstance: WebSocket | null = null
 
     instance = {
-        chats: <ChatType[]> {},
+        chats: <ChatType[]>{},
         qr: '',
-        messages: <WAMessage[]> [],
+        messages: <WAMessage[]>[],
         qrRetry: 0,
-        sock: <WASocket | null> null,
+        sock: <WASocket | null>null,
         online: false,
     }
 
     constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null, allowWebsocket?: boolean) {
-        this.app = app;
+        this.app = app
         this.key = key ? key : uuidv4()
         this.webHookInstance = getWebHookService(this.app)
         if (allowWebhook) this.webHookInstance = this.webHookInstance.enable(webhook)
@@ -105,8 +105,8 @@ class WhatsAppInstance {
         this.authState = await useAuthState(this.app, this.key)
         const socketConfig = {
             auth: this.authState.state,
-            browser: <[string, string, string]> Object.values(config.browser),
-            ...this.socketConfig
+            browser: <[string, string, string]>Object.values(config.browser),
+            ...this.socketConfig,
         }
         this.instance.sock = makeWASocket(socketConfig)
         this.setHandler()
@@ -115,7 +115,7 @@ class WhatsAppInstance {
 
     async drop() {
         this.authState = await useAuthState(this.app, this.key)
-        this.authState.dropCreds();
+        this.authState.dropCreds()
         return this
     }
 
@@ -145,14 +145,14 @@ class WhatsAppInstance {
             // 'call',
             // 'labels.edit',
             // 'labels.association',
-        ];
+        ]
 
         // on credentials update save state
         sock?.ev.on('creds.update', async (creds) => {
-            if (this.authState?.state) 
+            if (this.authState?.state)
                 this.authState.state.creds = {
                     ...this.authState.state.creds,
-                    ...creds
+                    ...creds,
                 }
             this.authState?.saveCreds()
         })
@@ -166,7 +166,8 @@ class WhatsAppInstance {
             if (connection === 'close') {
                 // reconnect if not logged out
                 if (
-                    (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
+                    (lastDisconnect?.error as Boom)?.output?.statusCode !==
+                    DisconnectReason.loggedOut
                 ) {
                     await this.init()
                 } else {
@@ -224,7 +225,9 @@ class WhatsAppInstance {
                         // close WebSocket connection
                         this.instance.sock?.ws.close()
                         // remove all events
-                        baileysEvents.forEach(ev => this.instance.sock?.ev.removeAllListeners(<any> ev))
+                        baileysEvents.forEach((ev) =>
+                            this.instance.sock?.ev.removeAllListeners(<any>ev)
+                        )
                         // terminated
                         this.instance.qr = ' '
                         logger.info('socket connection terminated')
@@ -246,12 +249,12 @@ class WhatsAppInstance {
         // on receive all chats
         sock?.ev.on('messaging-history.set', async ({ chats }) => {
             this.instance.chats = []
-            const receivedChats = chats.map(chat => {
+            const receivedChats = chats.map((chat) => {
                 return {
                     ...chat,
                     messages: [],
                     name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant)
+                    participant: this._toProtoParticipants(chat.participant),
                 }
             })
             this.instance.chats.push(...receivedChats)
@@ -268,7 +271,7 @@ class WhatsAppInstance {
                     ...chat,
                     messages: [],
                     name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant)
+                    participant: this._toProtoParticipants(chat.participant),
                 }
             })
             this.instance.chats.push(...chats)
@@ -279,16 +282,14 @@ class WhatsAppInstance {
             //console.log('chats.update')
             //console.log(changedChat)
             changedChat.map((chat) => {
-                const index = this.instance.chats.findIndex(
-                    (pc) => pc.id === chat.id
-                )
+                const index = this.instance.chats.findIndex((pc) => pc.id === chat.id)
                 const PrevChat = this.instance.chats[index]
                 this.instance.chats[index] = {
                     ...PrevChat,
                     ...chat,
                     messages: chat.messages ?? [],
                     name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant)
+                    participant: this._toProtoParticipants(chat.participant),
                 }
             })
         })
@@ -298,9 +299,7 @@ class WhatsAppInstance {
             //console.log('chats.delete')
             //console.log(deletedChats)
             deletedChats.map((chat) => {
-                const index = this.instance.chats.findIndex(
-                    (c) => c.id === chat
-                )
+                const index = this.instance.chats.findIndex((c) => c.id === chat)
                 this.instance.chats.splice(index, 1)
             })
         })
@@ -309,8 +308,7 @@ class WhatsAppInstance {
         sock?.ev.on('messages.upsert', async (m) => {
             //console.log('messages.upsert')
             //console.log(m)
-            if (m.type === 'append')
-                this.instance.messages.push(...m.messages)
+            if (m.type === 'append') this.instance.messages.push(...m.messages)
 
             if (m.type !== 'notify') return
 
@@ -342,11 +340,11 @@ class WhatsAppInstance {
 
                 const webhookData = {
                     ...{ key: this.key },
-                    ...msg,                    
+                    ...msg,
                     messageKey: msg.key,
                     instanceKey: this.key,
-                    text: <typeof m | null> null,
-                    msgContent: <string | null | void> null,
+                    text: <typeof m | null>null,
+                    msgContent: <string | null | void>null,
                 }
 
                 if (messageType === 'conversation') {
@@ -385,7 +383,7 @@ class WhatsAppInstance {
                     await this._sendCallback('message', webhookData, this.key)
             })
         })
-        
+
         sock?.ev.on('messages.update', async (messages) => {
             //console.log('messages.update')
             //console.dir(messages);
@@ -499,9 +497,9 @@ class WhatsAppInstance {
 
     _toProtoParticipants(parts: proto.IGroupParticipant[] | null | undefined) {
         const rank = [null, 'admin', 'superadmin']
-        return parts && parts.map(p => ({ id: p.userJid, admin: rank[p.rank ?? 0] })) || undefined
+        return ((parts && parts.map((p) => ({ id: p.userJid, admin: rank[p.rank ?? 0] }))) || undefined)
     }
- 
+
     async deleteInstance(key: string) {
         try {
             await this.db.Chat.findOneAndDelete({ key: key })
@@ -528,7 +526,7 @@ class WhatsAppInstance {
 
     async verifyId(id: string) {
         if (id.includes('@g.us')) return true
-        const [result] = await this.instance.sock?.onWhatsApp(id) ?? []
+        const [result] = (await this.instance.sock?.onWhatsApp(id)) ?? []
         if (result?.exists) return true
         throw new Error('no account exists')
     }
@@ -536,9 +534,9 @@ class WhatsAppInstance {
     async sendTextMessage(to: string, message: string) {
         await this.verifyId(this.getWhatsAppId(to))
         const data = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            { text: message }
-        )
+            this.getWhatsAppId(to), {
+            text: message,
+        })
         return data
     }
 
@@ -562,12 +560,12 @@ class WhatsAppInstance {
         await this.verifyId(this.getWhatsAppId(to))
 
         const data = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),  
-            processMessage({ 
-                type, 
-                caption, 
-                url, 
-                mimeType 
+            this.getWhatsAppId(to),
+            processMessage({
+                type,
+                caption,
+                url,
+                mimeType,
             })
         )
         return data
@@ -584,9 +582,7 @@ class WhatsAppInstance {
 
     async getUserStatus(of: string) {
         await this.verifyId(this.getWhatsAppId(of))
-        const status = await this.instance.sock?.fetchStatus(
-            this.getWhatsAppId(of)
-        )
+        const status = await this.instance.sock?.fetchStatus(this.getWhatsAppId(of))
         return status
     }
 
@@ -602,14 +598,12 @@ class WhatsAppInstance {
     async sendButtonMessage(to: string, data: ButtonMessage) {
         await this.verifyId(this.getWhatsAppId(to))
         const result = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            {
-                templateButtons: processButton(data.buttons),
-                text: data.text ?? '',
-                footer: data.footerText ?? '',
-                viewOnce: true,
-            }
-        )
+            this.getWhatsAppId(to), {
+            templateButtons: processButton(data.buttons),
+            text: data.text ?? '',
+            footer: data.footerText ?? '',
+            viewOnce: true,
+        })
         return result
     }
 
@@ -630,34 +624,28 @@ class WhatsAppInstance {
 
     async sendListMessage(to: string, data: ListMessage) {
         await this.verifyId(this.getWhatsAppId(to))
-        const result = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            {
-                text: data.text,
-                sections: data.sections,
-                buttonText: data.buttonText,
-                footer: data.description,
-                title: data.title,
-                viewOnce: true,
-            }
-        )
+        const result = await this.instance.sock?.sendMessage(this.getWhatsAppId(to), {
+            text: data.text,
+            sections: data.sections,
+            buttonText: data.buttonText,
+            footer: data.description,
+            title: data.title,
+            viewOnce: true,
+        })
         return result
     }
 
     async sendMediaButtonMessage(to: string, data: MediaButtonMessage) {
         await this.verifyId(this.getWhatsAppId(to))
 
-        const result = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            {
-                image: { url: data.image! },
-                footer: data.footerText ?? '',
-                caption: data.text,
-                templateButtons: processButton(data.buttons),
-                mimetype: data.mimeType,
-                viewOnce: true,
-            }
-        )
+        const result = await this.instance.sock?.sendMessage(this.getWhatsAppId(to), {
+            image: { url: data.image! },
+            footer: data.footerText ?? '',
+            caption: data.text,
+            templateButtons: processButton(data.buttons),
+            mimetype: data.mimeType,
+            viewOnce: true,
+        })
         return result
     }
 
@@ -672,10 +660,7 @@ class WhatsAppInstance {
     async updateProfilePicture(id: string, url: string) {
         try {
             const img = await axios.get(url, { responseType: 'arraybuffer' })
-            const res = await this.instance.sock?.updateProfilePicture(
-                id,
-                img.data
-            )
+            const res = await this.instance.sock?.updateProfilePicture(id, img.data)
             return res
         } catch (e) {
             //console.log(e)
@@ -691,10 +676,7 @@ class WhatsAppInstance {
         try {
             const chats = await this._getChats()
             const group = chats?.find((c) => c.id === this.getWhatsAppId(id))
-            if (!group)
-                throw new Error(
-                    'unable to get group, check if the group exists'
-                )
+            if (!group) throw new Error('unable to get group, check if the group exists')
             return group
         } catch (e) {
             logger.error(e)
@@ -708,7 +690,7 @@ class WhatsAppInstance {
     }
 
     _toParticipants(participants: GroupParticipant[]) {
-        return participants.map(p => ({ id: p.id, admin: p.admin ?? null }))
+        return participants.map((p) => ({ id: p.id, admin: p.admin ?? null }))
     }
 
     async _updateDbGroupsParticipants() {
@@ -720,7 +702,9 @@ class WhatsAppInstance {
                     const group = chats.find((c) => c.id === value.id)
                     if (group) {
                         const participants: GroupParticipant[] = []
-                        for (const [key_participant, participant] of Object.entries(value.participants)) {
+                        for (const [key_participant, participant] of Object.entries(
+                            value.participants
+                        )) {
                             participants.push(participant)
                         }
                         group.participant = this._toParticipants(participants)
@@ -765,8 +749,7 @@ class WhatsAppInstance {
         } catch {
             return {
                 error: true,
-                message:
-                    'Unable to add participant, you must be an admin in this group',
+                message: 'Unable to add participant, you must be an admin in this group',
             }
         }
     }
@@ -807,16 +790,18 @@ class WhatsAppInstance {
 
     async getAllGroups() {
         const chats = await this._getChats()
-        return chats?.filter((c) => c.id.includes('@g.us')).map((data, i) => {
-            return {
-                index: i,
-                name: data.name,
-                jid: data.id,
-                participant: data.participant,
-                creation: data.creation,
-                subjectOwner: data.subjectOwner,
-            }
-        })
+        return chats
+            ?.filter((c) => c.id.includes('@g.us'))
+            .map((data, i) => {
+                return {
+                    index: i,
+                    name: data.name,
+                    jid: data.id,
+                    participant: data.participant,
+                    creation: data.creation,
+                    subjectOwner: data.subjectOwner,
+                }
+            })
     }
 
     async leaveGroup(id: string) {
@@ -836,9 +821,7 @@ class WhatsAppInstance {
             const chats = await this._getChats()
             const group = chats?.find((c) => c.id === id)
             if (!group)
-                throw new Error(
-                    'unable to get invite code, check if the group exists'
-                )
+                throw new Error('unable to get invite code, check if the group exists')
             return await this.instance.sock?.groupInviteCode(id)
         } catch (e) {
             logger.error(e)
@@ -896,8 +879,7 @@ class WhatsAppInstance {
         }
     }
 
-    async _updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }
-    ) {
+    async _updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }) {
         //console.log(newChat)
         try {
             if (newChat && newChat.id) {
@@ -923,32 +905,24 @@ class WhatsAppInstance {
                                 is_owner = true
                             }
                             chat.participant = chat.participant.filter(
-                                p => p.id != participant
+                                (p) => p.id != participant
                             )
                         }
                     }
                     if (chat.participant && newChat.action == 'demote') {
                         for (const participant of newChat.participants) {
-                            if (
+                            if (chat.participant.filter((p) => p.id == participant)[0]) {
                                 chat.participant.filter(
-                                    p => p.id == participant
-                                )[0]
-                            ) {
-                                chat.participant.filter(
-                                    p => p.id == participant
+                                    (p) => p.id == participant
                                 )[0].admin = null
                             }
                         }
                     }
                     if (chat.participant && newChat.action == 'promote') {
                         for (const participant of newChat.participants) {
-                            if (
+                            if (chat.participant.filter((p) => p.id == participant)[0]) {
                                 chat.participant.filter(
-                                    p => p.id == participant
-                                )[0]
-                            ) {
-                                chat.participant.filter(
-                                    p => p.id == participant
+                                    (p) => p.id == participant
                                 )[0].admin = 'superadmin'
                             }
                         }
@@ -1011,8 +985,7 @@ class WhatsAppInstance {
             //console.log(e)
             return {
                 error: true,
-                message:
-                    'unable to ' + action + ' check if you are admin in group',
+                message: 'unable to ' + action + ' check if you are admin in group',
             }
         }
     }
@@ -1028,8 +1001,7 @@ class WhatsAppInstance {
             //console.log(e)
             return {
                 error: true,
-                message:
-                    'unable to update subject check if you are admin in group',
+                message: 'unable to update subject check if you are admin in group',
             }
         }
     }
@@ -1045,8 +1017,7 @@ class WhatsAppInstance {
             //console.log(e)
             return {
                 error: true,
-                message:
-                    'unable to update description check if you are admin in group',
+                message: 'unable to update description check if you are admin in group',
             }
         }
     }

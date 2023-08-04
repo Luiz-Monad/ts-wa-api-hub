@@ -1,38 +1,34 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "typescript",
-			"tsconfig": "tsconfig.json",
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build",
-			"label": "tsc: build"
-		},
-		{
-			"type": "typescript",
-			"tsconfig": "tsconfig.json",
-			"option": "watch",
-			"problemMatcher": [
-				"$tsc-watch"
-			],
-			"group": "build",
-			"label": "tsc: watch"
-		},
-		{
-			"type": "shell",
-			"command": "yarn run start",			
-			"group": "build",
-			"problemMatcher": [],
-			"label": "yarn: start",
-		},
-		{
-			"type": "shell",
-			"command": "yarn run lint:check",			
-			"group": "build",
-			"problemMatcher": [],
-			"label": "yarn: lint:check",
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "typescript",
+            "tsconfig": "tsconfig.json",
+            "problemMatcher": ["$tsc"],
+            "group": "build",
+            "label": "tsc: build"
+        },
+        {
+            "type": "typescript",
+            "tsconfig": "tsconfig.json",
+            "option": "watch",
+            "problemMatcher": ["$tsc-watch"],
+            "group": "build",
+            "label": "tsc: watch"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run start",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "yarn: start"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run lint:check",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "yarn: lint:check"
+        }
+    ]
 }

@@ -5,10 +5,10 @@ import { ReqHandler } from '../helper/types'
 import getInstanceForReq, { getInstanceService } from '../service/instance'
 import getDatabaseService from '../service/database'
 
-export const init : ReqHandler = async (req, res) => {
-    const key = <string> req.query.key
+export const init: ReqHandler = async (req, res) => {
+    const key = <string>req.query.key
     const webhook = !req.query.webhook ? false : !!req.query.webhook
-    const webhookUrl = !req.query.webhook ? null : <string> req.query.webhookUrl
+    const webhookUrl = !req.query.webhook ? null : <string>req.query.webhookUrl
     const websocket = !req.query.websocket ? false : !!req.query.websocket
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
     const instance = new WhatsAppInstance(req.app, key, webhook, webhookUrl, websocket)
@@ -30,7 +30,7 @@ export const init : ReqHandler = async (req, res) => {
     })
 }
 
-export const qr : ReqHandler = async (req, res) => {
+export const qr: ReqHandler = async (req, res) => {
     try {
         const qrcode = await getInstanceForReq(req)?.instance.qr
         res.render('qrcode', {
@@ -43,7 +43,7 @@ export const qr : ReqHandler = async (req, res) => {
     }
 }
 
-export const qrbase64 : ReqHandler = async (req, res) => {
+export const qrbase64: ReqHandler = async (req, res) => {
     try {
         const qrcode = await getInstanceForReq(req)?.instance.qr
         res.json({
@@ -58,11 +58,11 @@ export const qrbase64 : ReqHandler = async (req, res) => {
     }
 }
 
-export const info : ReqHandler = async (req, res) => {
+export const info: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
     let data
     try {
-        data = await instance.getInstanceDetail(<string> req.query.key)
+        data = await instance.getInstanceDetail(<string>req.query.key)
     } catch (error) {
         data = {}
     }
@@ -73,7 +73,7 @@ export const info : ReqHandler = async (req, res) => {
     })
 }
 
-export const restore : ReqHandler = async (req, res, next) => {
+export const restore: ReqHandler = async (req, res, next) => {
     try {
         const session = new Session(req.app)
         const restoredSessions = await session.restoreSessions()
@@ -87,7 +87,7 @@ export const restore : ReqHandler = async (req, res, next) => {
     }
 }
 
-export const logout : ReqHandler = async (req, res) => {
+export const logout: ReqHandler = async (req, res) => {
     let errormsg
     try {
         await getInstanceForReq(req).instance?.sock?.logout()
@@ -101,12 +101,12 @@ export const logout : ReqHandler = async (req, res) => {
     })
 }
 
-export const remove : ReqHandler = async (req, res) => {
+export const remove: ReqHandler = async (req, res) => {
     let errormsg
     try {
-        await getInstanceForReq(req).deleteInstance(<string> req.query.key)
+        await getInstanceForReq(req).deleteInstance(<string>req.query.key)
         let instances = getInstanceService(req.app).instances
-        delete instances[<string> req.query.key]
+        delete instances[<string>req.query.key]
     } catch (error) {
         errormsg = error
     }
@@ -117,10 +117,9 @@ export const remove : ReqHandler = async (req, res) => {
     })
 }
 
-export const list : ReqHandler = async (req, res) => {
-
+export const list: ReqHandler = async (req, res) => {
     if (req.query.active) {
-        let instance : string[] = []
+        let instance: string[] = []
         const db = getDatabaseService(req.app)
         const result = await db.listTable()
         result.forEach((table) => {
@@ -139,7 +138,7 @@ export const list : ReqHandler = async (req, res) => {
         instances[key].getInstanceDetail(key)
     )
     const data = await Promise.all(instance)
-    
+
     return res.json({
         error: false,
         message: 'All instance listed',

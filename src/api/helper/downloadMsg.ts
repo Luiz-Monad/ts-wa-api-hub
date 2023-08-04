@@ -1,7 +1,7 @@
 import { downloadContentFromMessage } from '@whiskeysockets/baileys'
 
-type MessageType = Parameters<typeof downloadContentFromMessage>[0];
-type MessageTypeType = Parameters<typeof downloadContentFromMessage>[1];
+type MessageType = Parameters<typeof downloadContentFromMessage>[0]
+type MessageTypeType = Parameters<typeof downloadContentFromMessage>[1]
 
 export default async function downloadMessage(msg: MessageType, msgType: MessageTypeType) {
     let buffer = Buffer.from([])

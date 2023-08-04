@@ -10,7 +10,7 @@ export class WebSocket {
     allowCallback: boolean = false
     io: Server | null = null
 
-    constructor (appServer: ServerType, allowCallback: boolean) {
+    constructor(appServer: ServerType, allowCallback: boolean) {
         this.appServer = appServer
         this.allowCallback = allowCallback
     }
@@ -18,9 +18,9 @@ export class WebSocket {
     async sendCallback(type: string, body: any, key: string) {
         if (!this.allowCallback) return
         if (!this.io) {
-            this.io = new Server(this.appServer);
+            this.io = new Server(this.appServer)
         }
-        this.io.emit(type, {  
+        this.io.emit(type, {
             ...body,
             instanceKey: key,
         })
@@ -33,11 +33,11 @@ export class WebSocket {
 
 export async function initWebSocketService(app: AppType, server: ServerType) {
     const allow = config.websocketEnabled
-    app.set('WebSocketService', new WebSocket(server, allow));
+    app.set('WebSocketService', new WebSocket(server, allow))
     if (allow) logger.info('Using WebSocket service')
 }
 
 export default function getWebSocketService(app: AppType): WebSocket {
-    const WebSocketService: WebSocket = app.get('WebSocketService');
-    return WebSocketService;
+    const WebSocketService: WebSocket = app.get('WebSocketService')
+    return WebSocketService
 }

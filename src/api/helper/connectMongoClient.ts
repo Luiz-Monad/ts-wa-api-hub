@@ -16,13 +16,13 @@ class MongoRecord<T extends Document> {
 
     async save(): Promise<void> {
         await this.collection.updateOne(this.record, this.record)
-    }    
+    }
 }
 
 class MongoTable<T extends Document> extends Table<T> {
     collection: Collection<T>
-    
-    constructor (db: Db, name: string) {
+
+    constructor(db: Db, name: string) {
         super()
         this.collection = db.collection(name)
         this.name = name
@@ -33,11 +33,11 @@ class MongoTable<T extends Document> extends Table<T> {
         return { ...mongoRecord, ...record }
     }
 
-    async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean; }): Promise<void> {
+    async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
         await this.collection.replaceOne(indexer, record, options ?? {})
     }
-  
-    async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean; }): Promise<void> {
+
+    async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
         await this.collection.updateOne(indexer, record, options ?? {})
     }
 
@@ -46,35 +46,35 @@ class MongoTable<T extends Document> extends Table<T> {
     }
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
-        return await this.collection.findOneAndDelete(indexer) as Value<T>
+        return (await this.collection.findOneAndDelete(indexer)) as Value<T>
     }
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
-        return await this.collection.findOne(indexer) as T
+        return (await this.collection.findOne(indexer)) as T
     }
-  
+
     async find(indexer: Keyed<T>): Promise<T[] | null> {
-        return (await this.collection.find(indexer).toArray()).map(r => r as T)
+        return (await this.collection.find(indexer).toArray()).map((r) => r as T)
     }
 
     async drop(): Promise<void> {
-        await this.collection.drop()        
+        await this.collection.drop()
     }
 }
 
 class MongoDatabase extends Database {
     db: Db
     Chat: Table<Chat>
-    
-    constructor (mongoClient: MongoClient) {
+
+    constructor(mongoClient: MongoClient) {
         super()
         this.db = mongoClient.db('whatsapp-api')
         this.Chat = this.table('Chat')
     }
 
     async listTable(): Promise<Table<any>[]> {
-        const collections = await this.db.listCollections().toArray();
-        return collections.map(c => this.table(c.name));
+        const collections = await this.db.listCollections().toArray()
+        return collections.map((c) => this.table(c.name))
     }
 
     table(name: string): Table<any> {
@@ -82,12 +82,11 @@ class MongoDatabase extends Database {
     }
 }
 
-
 export default async function connectMongoClient(app: AppType) {
     const logger = pino()
     const uri = config.mongodb.url
     const options = config.mongodb.options
-    
+
     try {
         const mongoClient = new MongoClient(uri, options)
         logger.info('STATE: Connecting to MongoDB')

@@ -1,7 +1,7 @@
 import { ReqHandler } from '../helper/types'
 import getInstanceForReq from '../service/instance'
-    
-export const create : ReqHandler = async (req, res) => {
+
+export const create: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).createNewGroup(
         req.body.name,
         req.body.users
@@ -9,7 +9,7 @@ export const create : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const addNewParticipant : ReqHandler = async (req, res) => {
+export const addNewParticipant: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).addNewParticipant(
         req.body.id,
         req.body.users
@@ -17,49 +17,41 @@ export const addNewParticipant : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const makeAdmin : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).makeAdmin(
-        req.body.id,
-        req.body.users
-    )
+export const makeAdmin: ReqHandler = async (req, res) => {
+    const data = await getInstanceForReq(req).makeAdmin(req.body.id, req.body.users)
     return res.status(201).json({ error: false, data: data })
 }
 
-export const demoteAdmin : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).demoteAdmin(
-        req.body.id,
-        req.body.users
-    )
+export const demoteAdmin: ReqHandler = async (req, res) => {
+    const data = await getInstanceForReq(req).demoteAdmin(req.body.id, req.body.users)
     return res.status(201).json({ error: false, data: data })
 }
 
-export const listAll : ReqHandler = async (req, res) => {
+export const listAll: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).getAllGroups()
     return res.status(201).json({ error: false, data: data })
 }
 
-export const leaveGroup : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).leaveGroup(<string> req.query.id)
+export const leaveGroup: ReqHandler = async (req, res) => {
+    const data = await getInstanceForReq(req).leaveGroup(<string>req.query.id)
     return res.status(201).json({ error: false, data: data })
 }
 
-export const getInviteCodeGroup : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).getInviteCodeGroup(
-        <string> req.query.id
-    )
+export const getInviteCodeGroup: ReqHandler = async (req, res) => {
+    const data = await getInstanceForReq(req).getInviteCodeGroup(<string>req.query.id)
     return res
         .status(201)
         .json({ error: false, link: 'https://chat.whatsapp.com/' + data })
 }
 
-export const getInstanceInviteCodeGroup : ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).getInstanceInviteCodeGroup(<string> req.query.id)
+export const getInstanceInviteCodeGroup: ReqHandler = async (req, res) => {
+    const data = await getInstanceForReq(req).getInstanceInviteCodeGroup(<string>req.query.id)
     return res
         .status(201)
         .json({ error: false, link: 'https://chat.whatsapp.com/' + data })
 }
 
-export const getAllGroups : ReqHandler = async (req, res) => {
+export const getAllGroups: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
     let data
     try {
@@ -74,7 +66,7 @@ export const getAllGroups : ReqHandler = async (req, res) => {
     })
 }
 
-export const groupParticipantsUpdate : ReqHandler = async (req, res) => {
+export const groupParticipantsUpdate: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).groupParticipantsUpdate(
         req.body.id,
         req.body.users,
@@ -83,7 +75,7 @@ export const groupParticipantsUpdate : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const groupSettingUpdate : ReqHandler = async (req, res) => {
+export const groupSettingUpdate: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).groupSettingUpdate(
         req.body.id,
         req.body.action
@@ -91,7 +83,7 @@ export const groupSettingUpdate : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const groupUpdateSubject : ReqHandler = async (req, res) => {
+export const groupUpdateSubject: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).groupUpdateSubject(
         req.body.id,
         req.body.subject
@@ -99,7 +91,7 @@ export const groupUpdateSubject : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const groupUpdateDescription : ReqHandler = async (req, res) => {
+export const groupUpdateDescription: ReqHandler = async (req, res) => {
     const data = await getInstanceForReq(req).groupUpdateDescription(
         req.body.id,
         req.body.description
@@ -107,7 +99,7 @@ export const groupUpdateDescription : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const groupInviteInfo : ReqHandler = async (req, res) => {
+export const groupInviteInfo: ReqHandler = async (req, res) => {
     // const data = await getInstanceForReq(req).groupGetInviteInfo(
     //     req.body.code
     // )
@@ -115,7 +107,7 @@ export const groupInviteInfo : ReqHandler = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
-export const groupJoin : ReqHandler = async (req, res) => {
+export const groupJoin: ReqHandler = async (req, res) => {
     // const data = await getInstanceForReq(req).groupAcceptInvite(
     //     req.body.code
     // )

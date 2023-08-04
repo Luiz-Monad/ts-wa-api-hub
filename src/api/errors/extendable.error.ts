@@ -1,4 +1,3 @@
-
 class ExtendableError extends Error {
     errors: string
     status: number

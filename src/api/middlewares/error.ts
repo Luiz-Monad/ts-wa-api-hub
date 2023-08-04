@@ -1,7 +1,7 @@
 import APIError from '../../api/errors/api.error'
 import { ErrHandler, ReqHandler } from '../helper/types'
 
-export const handler : ErrHandler = (err, req, res, next) => {
+export const handler: ErrHandler = (err, req, res, next) => {
     const statusCode = err.status ? err.status : 500
 
     res.setHeader('Content-Type', 'application/json')
@@ -13,7 +13,7 @@ export const handler : ErrHandler = (err, req, res, next) => {
     })
 }
 
-export const notFound : ReqHandler = (req, res, next) => {
+export const notFound: ReqHandler = (req, res, next) => {
     const err = new APIError({
         message: 'Not found',
         status: 404,

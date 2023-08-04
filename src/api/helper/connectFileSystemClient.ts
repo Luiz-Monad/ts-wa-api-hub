@@ -25,26 +25,27 @@ class FsRecord<T> {
 
     async save(): Promise<void> {
         await this.fsTable.updateOne(this.record, this.record)
-    }    
+    }
 }
 
 class FsTable<T> extends Table<T> {
     filePath: string
-    
+
     constructor(directory: string, name: string) {
         super()
         this.filePath = path.join(directory, `${name}.json`)
         this.name = name
     }
 
-    keyPredicate = (find: Keyed<T>) => (obj: Keyed<T>) => 
-        ('key' in obj ? obj.key : '_id' in obj ? obj._id : 0) === ('key' in find ? find.key : '_id' in find ? find._id : 0)
+    keyPredicate = (find: Keyed<T>) => (obj: Keyed<T>) =>
+        ('key' in obj ? obj.key : '_id' in obj ? obj._id : 0) ===
+        ('key' in find ? find.key : '_id' in find ? find._id : 0)
 
     async load(): Promise<Keyed<T>[]> {
         try {
             const data = await readFile(this.filePath, 'utf-8')
             return JSON.parse(data)
-        } catch(err: any) {
+        } catch (err: any) {
             // If file doesn't exist yet, return an empty array
             if (err.code === 'ENOENT') {
                 return []
@@ -105,23 +106,23 @@ class FsTable<T> extends Table<T> {
         const records = await this.load()
         return records.find(this.keyPredicate(indexer)) as T
     }
-  
+
     async find(indexer: Keyed<T>): Promise<T[]> {
         const records = await this.load()
-        return records.filter(this.keyPredicate(indexer)).map(r => r as T)
+        return records.filter(this.keyPredicate(indexer)).map((r) => r as T)
     }
 
     async drop(): Promise<void> {
-        await unlink(this.filePath)       
+        await unlink(this.filePath)
     }
 }
 
 class FsDatabase extends Database {
     directory: string
     Chat: Table<Chat>
-    
+
     // eslint-disable-next-line @typescript-eslint/ban-types
-    constructor (directory: string, options: {}) {
+    constructor(directory: string, options: {}) {
         super()
         this.directory = directory
         this.Chat = this.table('Chat')
@@ -130,8 +131,8 @@ class FsDatabase extends Database {
     async listTable(): Promise<Table<any>[]> {
         const fileNames = await readdir(this.directory)
         return fileNames
-            .filter(name => name.endsWith('.json'))
-            .map(name => this.table(path.basename(name, '.json')))
+            .filter((name) => name.endsWith('.json'))
+            .map((name) => this.table(path.basename(name, '.json')))
     }
 
     table(name: string): Table<any> {
@@ -139,12 +140,11 @@ class FsDatabase extends Database {
     }
 }
 
-
 export default async function connectFileSystemClient(app: AppType) {
     const logger = pino()
     const path = config.localfs.path
     const options = config.localfs.options
-    
+
     try {
         await mkdir(path, { recursive: true })
         return new FsDatabase(path, options)

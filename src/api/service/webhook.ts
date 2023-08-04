@@ -10,7 +10,7 @@ export class WebHook {
     allowCallback: boolean
     axiosInstance: AxiosInstance | null = null
 
-    constructor (webHookUrl: string | null, allowCallback: boolean) {
+    constructor(webHookUrl: string | null, allowCallback: boolean) {
         this.webHookUrl = webHookUrl
         this.allowCallback = allowCallback
     }
@@ -32,19 +32,21 @@ export class WebHook {
     }
 
     enable(customWebhook?: string | null) {
-        if (customWebhook) { return new WebHook(customWebhook, true) }
-        return new WebHook(this.webHookUrl, true) 
+        if (customWebhook) {
+            return new WebHook(customWebhook, true)
+        }
+        return new WebHook(this.webHookUrl, true)
     }
 }
 
 export async function initWebHookService(app: AppType, server: ServerType) {
     const allow = config.webhookEnabled
     const webhookUrl = config.webhookUrl ?? null
-    app.set('WebHookService', new WebHook(webhookUrl, allow));
+    app.set('WebHookService', new WebHook(webhookUrl, allow))
     if (allow) logger.info(`Using WebHooks service at ${webhookUrl}`)
 }
 
 export default function getWebHookService(app: AppType): WebHook {
-    const WebHookService: WebHook = app.get('WebHookService');
-    return WebHookService;
+    const WebHookService: WebHook = app.get('WebHookService')
+    return WebHookService
 }

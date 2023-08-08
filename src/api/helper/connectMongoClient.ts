@@ -30,7 +30,7 @@ class MongoTable<T extends Document> extends Table<T> {
 
     record(record: Keyed<T>): Keyed<T> & Record {
         const mongoRecord = new MongoRecord(this.collection, record) as Record
-        return { ...mongoRecord, ...record }
+        return Object.assign(mongoRecord, record);
     }
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {

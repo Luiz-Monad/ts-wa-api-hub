@@ -15,7 +15,7 @@ const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || true
 // ==================================
 // INSTANCE CONFIGURATION
 // ==================================
-const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 2
+const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 3
 const RESTORE_SESSIONS_ON_START_UP = !!(process.env.RESTORE_SESSIONS_ON_START_UP && process.env.RESTORE_SESSIONS_ON_START_UP === 'true')
 
 // ==================================

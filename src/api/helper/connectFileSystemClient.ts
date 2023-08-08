@@ -37,9 +37,11 @@ class FsTable<T> extends Table<T> {
         this.name = name
     }
 
+    getKey = (obj: Keyed<T>) => 
+        ('key' in obj ? obj.key : '_id' in obj ? obj._id : '')
+
     keyPredicate = (find: Keyed<T>) => (obj: Keyed<T>) =>
-        ('key' in obj ? obj.key : '_id' in obj ? obj._id : 0) ===
-        ('key' in find ? find.key : '_id' in find ? find._id : 0)
+        this.getKey(find) === this.getKey(obj)
 
     async load(): Promise<Keyed<T>[]> {
         try {
@@ -60,13 +62,14 @@ class FsTable<T> extends Table<T> {
 
     record(record: Keyed<T>): Keyed<T> & Record {
         const fileRecord = new FsRecord(this, record) as Record
-        return { ...fileRecord, ...record }
+        return Object.assign(fileRecord, record);
     }
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
         const records = await this.load()
-        const index = records.findIndex(this.keyPredicate(indexer))
+        let index = records.findIndex(this.keyPredicate(indexer))
         if (index !== -1 || options?.upsert) {
+            if (index < 0) index = records.length
             records[index] = { ...record, ...indexer }
             await this.save(records)
         }
@@ -74,8 +77,9 @@ class FsTable<T> extends Table<T> {
   
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
         const records = await this.load()
-        const index = records.findIndex(this.keyPredicate(indexer))
-        if (index !== -1) {
+        let index = records.findIndex(this.keyPredicate(indexer))
+        if (index !== -1 || options?.upsert) {
+            if (index < 0) index = records.length
             records[index] = { ...records[index], ...record }
             await this.save(records)
         }

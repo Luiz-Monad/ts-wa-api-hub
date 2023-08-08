@@ -25,6 +25,14 @@
         },
         {
             "type": "shell",
+            "command": "yarn run debug",
+            "group": "build",
+            "problemMatcher": ["$tsc"],
+            "label": "yarn: debug",
+            "isBackground": true
+        },
+        {
+            "type": "shell",
             "command": "yarn run lint:check",
             "group": "build",
             "problemMatcher": [],

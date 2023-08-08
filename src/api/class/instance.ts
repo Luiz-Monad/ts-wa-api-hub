@@ -65,7 +65,7 @@ export interface MessageKey {
 class WhatsAppInstance {
     app: AppType
     socketConfig = {
-        defaultQueryTimeoutMs: undefined,
+        defaultQueryTimeoutMs: 60000,
         printQRInTerminal: false,
         logger: pino({
             level: config.log.level,

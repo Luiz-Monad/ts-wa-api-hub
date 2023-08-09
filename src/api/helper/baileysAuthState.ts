@@ -5,6 +5,9 @@ import { generateRegistrationId } from '@whiskeysockets/baileys/lib/Utils/generi
 import { randomBytes } from 'crypto'
 import { AppType, TypeOfPromise } from './types'
 import getDatabaseService from '../service/database'
+import getLogger from '../../config/logging'
+
+const logger = getLogger('auth')
 
 const initAuthCreds = () => {
     const identityKey = Curve.generateKeyPair()
@@ -59,27 +62,40 @@ export default async function useAuthState(app: AppType, key: string) {
     const db = getDatabaseService(app)
     const table = db.table(key)
     const writeData = async (data: any, id: string) => {
-        return await table.replaceOne(
-            { _id: id },
-            JSON.parse(JSON.stringify(data, BufferJSON.replacer)),
-            { upsert: true }
-        )
+        try {
+            return await table.replaceOne(
+                { _id: id },
+                JSON.parse(JSON.stringify(data, BufferJSON.replacer)),
+                { upsert: true }
+            )
+        } catch (error) {
+            logger.error(error)
+            throw error
+        }
     }
     const readData = async (id: string) => {
         try {
             const data = JSON.stringify(await table.findOne({ _id: id }))
             return JSON.parse(data, BufferJSON.reviver)
         } catch (error) {
+            logger.warn(error)
             return null
         }
     }
     const removeData = async (id: string) => {
         try {
             await table.deleteOne({ _id: id })
-        } catch (_a) {}
+        } catch (error) {
+            logger.warn(error)
+        }
     }
     const dropBobbyTable = async () => {
-        await table.drop()
+        try {
+            await table.drop()
+        } catch (error) {
+            logger.error(error)
+            throw error
+        }
     }
     const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds()
     return {

@@ -40,6 +40,10 @@ class FsTable<T> extends Table<T> {
         this.filePath = path.join(directory, `${name}.json`)
     }
 
+    async lock(): Promise<() => Promise<void>> {
+        return await lockfile.lock(this.filePath, { realpath: false, retries: 16 })
+    }
+
     getKey = (obj: Keyed<T>) => 
         ('key' in obj ? obj.key : '_id' in obj ? obj._id : '')
 
@@ -70,7 +74,7 @@ class FsTable<T> extends Table<T> {
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
         logger.debug([indexer, record, options], 'replace one')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             let index = records.findIndex(this.keyPredicate(indexer))
@@ -88,7 +92,7 @@ class FsTable<T> extends Table<T> {
   
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
         logger.debug([indexer, record, options], 'update one')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             let index = records.findIndex(this.keyPredicate(indexer))
@@ -107,7 +111,7 @@ class FsTable<T> extends Table<T> {
 
     async deleteOne(indexer: Keyed<T>): Promise<void> {
         logger.debug([indexer], 'delete one')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             const index = records.findIndex(this.keyPredicate(indexer))
@@ -125,7 +129,7 @@ class FsTable<T> extends Table<T> {
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
         logger.debug([indexer], 'find and delete one')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             const index = records.findIndex(this.keyPredicate(indexer))
@@ -146,7 +150,7 @@ class FsTable<T> extends Table<T> {
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
         logger.debug([indexer], 'find one')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             return records.find(this.keyPredicate(indexer)) as T
@@ -160,7 +164,7 @@ class FsTable<T> extends Table<T> {
 
     async find(indexer: Keyed<T>): Promise<T[]> {
         logger.debug([indexer], 'find query')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             const records = await this.load()
             return records.filter(this.keyPredicate(indexer)).map((r) => r as T)
@@ -174,7 +178,7 @@ class FsTable<T> extends Table<T> {
 
     async drop(): Promise<void> {
         logger.debug([], 'drop table')
-        const release = await lockfile.lock(this.filePath, { realpath: false, retries: 3 });
+        const release = await this.lock();
         try {
             await unlink(this.filePath)
         } catch (err) {

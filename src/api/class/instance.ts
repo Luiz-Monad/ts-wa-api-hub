@@ -172,7 +172,7 @@ class WhatsAppInstance {
                     DisconnectReason.loggedOut
                 ) {
                     this.instance.initRetry++
-                    if (this.instance.initRetry >= Number(config.instance.maxRetryInit)) {
+                    if (this.instance.initRetry < Number(config.instance.maxRetryInit)) {
                         await this.init()
                     } else {
                         await this.drop()

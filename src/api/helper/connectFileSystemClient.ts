@@ -1,4 +1,3 @@
-import pino from 'pino'
 import { AppType } from './types'
 import lockfile from 'proper-lockfile'
 import config from '../../config/config'
@@ -7,6 +6,9 @@ import Chat from '../models/chat.model'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as util from 'util'
+import getLogger from '../../config/logging'
+
+const logger = getLogger('database')
 
 // Promisified version of fs methods for asynchronous operations
 const writeFile = util.promisify(fs.writeFile)
@@ -181,7 +183,6 @@ class FsDatabase extends Database {
 }
 
 export default async function connectFileSystemClient(app: AppType) {
-    const logger = pino()
     const path = config.localfs.path
     const options = config.localfs.options
 

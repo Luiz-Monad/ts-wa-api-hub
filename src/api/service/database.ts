@@ -3,9 +3,9 @@ import connectMongoClient from '../helper/connectMongoClient'
 import connectFileSystemClient from '../helper/connectFileSystemClient'
 import { AppType } from '../helper/types'
 import Database from '../models/db.model'
-import pino from 'pino'
+import getLogger from '../../config/logging'
 
-const logger = pino()
+const logger = getLogger('database')
 
 export async function initDatabaseService(app: AppType) {
     let database: Database | null = null

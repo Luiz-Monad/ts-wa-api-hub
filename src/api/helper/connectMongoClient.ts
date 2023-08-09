@@ -1,9 +1,11 @@
 import { Collection, Db, MongoClient, Document, WithoutId } from 'mongodb'
-import pino from 'pino'
 import { AppType } from './types'
 import config from '../../config/config'
 import Database, { Keyed, Record, Table, Value } from '../models/db.model'
 import Chat from '../models/chat.model'
+import getLogger from '../../config/logging'
+
+const logger = getLogger('database')
 
 class MongoRecord<T extends Document> {
     collection: Collection<T>
@@ -83,7 +85,6 @@ class MongoDatabase extends Database {
 }
 
 export default async function connectMongoClient(app: AppType) {
-    const logger = pino()
     const uri = config.mongodb.url
     const options = config.mongodb.options
 

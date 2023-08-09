@@ -2,7 +2,7 @@ import path from 'path'
 import express from 'express'
 import exceptionHandler from 'express-exception-handler'
 import cors from 'cors'
-import morgan from 'morgan'
+import pinoHttp from 'pino-http'
 import * as error from '../api/middlewares/error'
 import tokenCheck from '../api/middlewares/tokenCheck'
 import config from './config'
@@ -14,8 +14,11 @@ if (!config.protectRoutes) {
     app.options('*', cors())
 }
 
-if (config.log.httpLevel) {
-    app.use(morgan('common'))
+if (config.log.httpLevel !== "silent") {
+    app.use(pinoHttp({
+        name: 'http',    
+        level: config.log.httpLevel,
+    }))
 }
 
 app.use(express.json())

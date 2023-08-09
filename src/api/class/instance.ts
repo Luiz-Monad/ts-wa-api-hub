@@ -1,5 +1,4 @@
 import QRCode from 'qrcode'
-import pino from 'pino'
 import { Boom } from '@hapi/boom'
 import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, default as makeWASocket } from '@whiskeysockets/baileys'
 import { v4 as uuidv4 } from 'uuid'
@@ -15,9 +14,10 @@ import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
 import Database from '../models/db.model'
+import getLogger from '../../config/logging'
 import axios from 'axios'
 
-const logger = pino()
+const logger = getLogger('instance')
 
 type WASocket = ReturnType<typeof makeWASocket>
 
@@ -65,11 +65,10 @@ export interface MessageKey {
 class WhatsAppInstance {
     app: AppType
     socketConfig = {
-        defaultQueryTimeoutMs: 60000,
+        connectTimeoutMs: 2 * 60 * 1000,
+        defaultQueryTimeoutMs: 2 * 1000,
         printQRInTerminal: false,
-        logger: pino({
-            level: config.log.level,
-        }),
+        logger: getLogger('socket', config.log.level),
     }
     key: string
     authState: AuthState = <AuthState>{}
@@ -80,9 +79,10 @@ class WhatsAppInstance {
     instance = {
         chats: <ChatType[]>{},
         qr: '',
-        messages: <WAMessage[]>[],
+        qr_url: '',
         qrRetry: 0,
         initRetry: 0,
+        messages: <WAMessage[]>[],
         sock: <WASocket | null>null,
         online: false,
     }
@@ -173,9 +173,9 @@ class WhatsAppInstance {
                 ) {
                     this.instance.initRetry++
                     if (this.instance.initRetry >= Number(config.instance.maxRetryInit)) {
-                    await this.init()
-                } else {
-                    await this.drop()
+                        await this.init()
+                    } else {
+                        await this.drop()
                         logger.info('STATE: Init failure')
                         this.instance.online = false
                     }
@@ -227,8 +227,10 @@ class WhatsAppInstance {
             }
 
             if (qr) {
-                QRCode.toDataURL(qr).then((url) => {
-                    this.instance.qr = url
+                logger.info(`qr: ${qr}`)
+                QRCode.toDataURL(qr).then((base64image) => {
+                    this.instance.qr = base64image
+                    this.instance.qr_url = qr
                     this.instance.qrRetry++
                     if (this.instance.qrRetry >= Number(config.instance.maxRetryQr)) {
                         // close WebSocket connection

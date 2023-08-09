@@ -1,9 +1,10 @@
 import { AppType, ServerType } from '../helper/types'
 import { Server } from 'socket.io'
 import config from '../../config/config'
-import pino from 'pino'
+import getLogger from '../../config/logging'
 
-const logger = pino()
+const logger = getLogger('websocket')
+
 
 export class WebSocket {
     appServer: ServerType

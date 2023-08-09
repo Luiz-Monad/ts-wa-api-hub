@@ -1,9 +1,9 @@
 import WhatsAppSession from '../class/session'
 import { AppType } from '../helper/types'
 import config from '../../config/config'
-import pino from 'pino'
+import getLogger from '../../config/logging'
 
-const logger = pino()
+const logger = getLogger('session')
 
 interface Session {
     instance?: WhatsAppSession

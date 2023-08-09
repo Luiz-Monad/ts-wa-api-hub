@@ -10,7 +10,7 @@ const PROTECT_ROUTES = !!(process.env.PROTECT_ROUTES && process.env.PROTECT_ROUT
 const PORT = process.env.PORT || '3333'
 const APP_URL = process.env.APP_URL || false
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
-const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || true
+const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || 'info'
 
 // ==================================
 // INSTANCE CONFIGURATION
@@ -91,7 +91,7 @@ export default {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
         maxRetryInit: INSTANCE_MAX_RETRY_INIT,
         restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
-        markMessagesRead: MARK_MESSAGES_READ,        
+        markMessagesRead: MARK_MESSAGES_READ,
     },
     database: {
         enabled: MONGODB_ENABLED || DATABASE_ENABLED,

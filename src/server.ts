@@ -1,8 +1,8 @@
 import dotenv from 'dotenv'
-import pino from 'pino'
-
 dotenv.config()
-const logger = pino()
+
+import getLogger from './config/logging'
+const logger = getLogger('server')
 
 import http from 'http'
 import app from './config/express'
@@ -41,7 +41,6 @@ const exitHandler = () => {
 
 const unexpectedErrorHandler: ErrHandler = (error) => {
     logger.error(error)
-    exitHandler()
 }
 
 process.on('uncaughtException', unexpectedErrorHandler)

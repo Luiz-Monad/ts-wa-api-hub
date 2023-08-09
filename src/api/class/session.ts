@@ -1,10 +1,10 @@
 import WhatsAppInstance from '../class/instance'
-import pino from 'pino'
 import getDatabaseService from '../service/database'
 import { AppType } from '../helper/types'
 import { getInstanceService } from '../service/instance'
+import getLogger from '../../config/logging'
 
-const logger = pino()
+const logger = getLogger('session')
 
 class Session {
     app: AppType

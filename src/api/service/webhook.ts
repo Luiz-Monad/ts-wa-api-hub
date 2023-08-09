@@ -1,9 +1,9 @@
 import { AppType, ServerType } from '../helper/types'
 import axios, { AxiosInstance } from 'axios'
 import config from '../../config/config'
-import pino from 'pino'
+import getLogger from '../../config/logging'
 
-const logger = pino()
+const logger = getLogger('webhook')
 
 export class WebHook {
     webHookUrl: string | null

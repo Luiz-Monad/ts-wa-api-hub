@@ -58,6 +58,21 @@ export const qrbase64: ReqHandler = async (req, res) => {
     }
 }
 
+export const qrurl: ReqHandler = async (req, res) => {
+    try {
+        const qrurl = await getInstanceForReq(req)?.instance.qr_url
+        res.json({
+            error: false,
+            message: 'QR url fetched successfully',
+            qrcode: qrurl,
+        })
+    } catch {
+        res.json({
+            qrcode: '',
+        })
+    }
+}
+
 export const info: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
     let data

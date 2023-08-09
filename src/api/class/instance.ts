@@ -68,7 +68,7 @@ class WhatsAppInstance {
         connectTimeoutMs: 2 * 60 * 1000,
         defaultQueryTimeoutMs: 2 * 1000,
         printQRInTerminal: false,
-        logger: getLogger('socket', config.log.level),
+        logger: getLogger('socket', config.log.walevel),
     }
     key: string
     authState: AuthState = <AuthState>{}

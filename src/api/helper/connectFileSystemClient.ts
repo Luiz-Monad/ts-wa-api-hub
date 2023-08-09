@@ -69,7 +69,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer, record, options], 'replace one')
         try {
             const records = await this.load()
             let index = records.findIndex(this.keyPredicate(indexer))
@@ -84,7 +84,7 @@ class FsTable<T> extends Table<T> {
     }
   
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer, record, options], 'update one')
         try {
             const records = await this.load()
             let index = records.findIndex(this.keyPredicate(indexer))
@@ -99,7 +99,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async deleteOne(indexer: Keyed<T>): Promise<void> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer], 'delete one')
         try {
             const records = await this.load()
             const index = records.findIndex(this.keyPredicate(indexer))
@@ -113,7 +113,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer], 'find and delete one')
         try {
             const records = await this.load()
             const index = records.findIndex(this.keyPredicate(indexer))
@@ -130,7 +130,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer], 'find one')
         try {
             const records = await this.load()
             return records.find(this.keyPredicate(indexer)) as T
@@ -140,7 +140,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async find(indexer: Keyed<T>): Promise<T[]> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([indexer], 'find query')
         try {
             const records = await this.load()
             return records.filter(this.keyPredicate(indexer)).map((r) => r as T)
@@ -150,7 +150,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async drop(): Promise<void> {
-        const release = await lockfile.lock(this.filePath);
+        logger.debug([], 'drop table')
         try {
             await unlink(this.filePath)
         } finally {

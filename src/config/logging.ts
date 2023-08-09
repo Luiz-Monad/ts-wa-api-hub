@@ -1,5 +1,7 @@
-import pino from 'pino'
+import pino, { LevelWithSilent } from 'pino'
+import pinoHttp from 'pino-http'
 import prettyPrint from 'pino-pretty'
+import config from './config'
 
 const colorCodes = [
     30, // Black
@@ -51,16 +53,25 @@ function colorizeMessage(loggerName: string): string {
     return `${getAnsiColor(colorCode)}${loggerName}\x1b[0m`
 }
 
-export default function getLogger(name: string, logLevel: string = 'silent') {
-    return pino({
-        name: name,
-        logLevel: logLevel,
-    }, prettyPrint({
+function getStream() {
+    return prettyPrint({
         customPrettifiers: {
             name: msg => colorizeMessage(`${msg}`),
         },
-        // messageFormat: (log, messageKey) => {
-        //     return message(`${log[messageKey]}`)
-        // }
-    }))
+    })
+}
+
+export function getHttpLogger() {
+    return pinoHttp({
+        name: 'http',    
+        level: config.log.httpLevel,
+        stream: getStream(),
+    })    
+}
+
+export default function getLogger(name: string, logLevel?: string) {
+    return pino({
+        name: name,
+        logLevel: logLevel ?? config.log.level,
+    }, getStream())
 }

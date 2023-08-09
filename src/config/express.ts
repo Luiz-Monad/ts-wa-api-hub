@@ -2,10 +2,11 @@ import path from 'path'
 import express from 'express'
 import exceptionHandler from 'express-exception-handler'
 import cors from 'cors'
-import pinoHttp from 'pino-http'
 import * as error from '../api/middlewares/error'
 import tokenCheck from '../api/middlewares/tokenCheck'
 import config from './config'
+import { getHttpLogger } from './logging'
+import routes from '../api/routes/'
 
 exceptionHandler.handle()
 const app = express()
@@ -15,10 +16,7 @@ if (!config.protectRoutes) {
 }
 
 if (config.log.httpLevel !== "silent") {
-    app.use(pinoHttp({
-        name: 'http',    
-        level: config.log.httpLevel,
-    }))
+    app.use(getHttpLogger())
 }
 
 app.use(express.json())
@@ -28,7 +26,6 @@ app.use(express.urlencoded({ extended: true }))
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, '../api/views'))
 
-import routes from '../api/routes/'
 if (config.protectRoutes) {
     app.use(tokenCheck)
 }

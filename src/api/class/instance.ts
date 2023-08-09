@@ -14,7 +14,7 @@ import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
 import Database from '../models/db.model'
-import getLogger from '../../config/logging'
+import getLogger, { getWaLogger } from '../../config/logging'
 import axios from 'axios'
 
 const logger = getLogger('instance')
@@ -67,8 +67,8 @@ class WhatsAppInstance {
     socketConfig = {
         connectTimeoutMs: 2 * 60 * 1000,
         defaultQueryTimeoutMs: 2 * 1000,
-        printQRInTerminal: false,
-        logger: getLogger('socket', config.log.walevel),
+        printQRInTerminal: true,
+        logger: getWaLogger(),
     }
     key: string
     authState: AuthState = <AuthState>{}

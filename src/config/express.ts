@@ -15,7 +15,7 @@ if (!config.protectRoutes) {
     app.options('*', cors())
 }
 
-if (config.log.httpLevel !== "silent") {
+if (config.log.httpLevel !== 'silent') {
     app.use(getHttpLogger())
 }
 

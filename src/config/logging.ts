@@ -64,14 +64,20 @@ function getStream() {
 export function getHttpLogger() {
     return pinoHttp({
         name: 'http',    
-        level: config.log.httpLevel,
-        stream: getStream(),
-    })    
+        level: config.log.httpLevel
+    }, getStream())
 }
 
-export default function getLogger(name: string, logLevel?: string) {
+export function getWaLogger() {
+    return pino({
+        name: `wasock`,
+        level: config.log.waLevel,
+    }, getStream())
+}
+
+export default function getLogger(name: string) {
     return pino({
         name: name,
-        logLevel: logLevel ?? config.log.level,
+        level: config.log.level,
     }, getStream())
 }

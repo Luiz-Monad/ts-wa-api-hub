@@ -86,7 +86,7 @@ export default {
     appUrl: APP_URL,
     log: {
         level: LOG_LEVEL,
-        walevel: WA_LOG_LEVEL,
+        waLevel: WA_LOG_LEVEL,
         httpLevel: HTTP_LOG_LEVEL,
     },
     instance: {

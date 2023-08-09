@@ -58,8 +58,8 @@ const BufferJSON = {
 export default async function useAuthState(app: AppType, key: string) {
     const db = getDatabaseService(app)
     const table = db.table(key)
-    const writeData = (data: any, id: string) => {
-        return table.replaceOne(
+    const writeData = async (data: any, id: string) => {
+        return await table.replaceOne(
             { _id: id },
             JSON.parse(JSON.stringify(data, BufferJSON.replacer)),
             { upsert: true }

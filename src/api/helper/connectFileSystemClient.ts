@@ -1,5 +1,6 @@
 import pino from 'pino'
 import { AppType } from './types'
+import lockfile from 'proper-lockfile'
 import config from '../../config/config'
 import Database, { Keyed, Record, Table, Value } from '../models/db.model'
 import Chat from '../models/chat.model'
@@ -66,58 +67,93 @@ class FsTable<T> extends Table<T> {
     }
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
-        const records = await this.load()
-        let index = records.findIndex(this.keyPredicate(indexer))
-        if (index !== -1 || options?.upsert) {
-            if (index < 0) index = records.length
-            records[index] = { ...record, ...indexer }
-            await this.save(records)
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            let index = records.findIndex(this.keyPredicate(indexer))
+            if (index !== -1 || options?.upsert) {
+                if (index < 0) index = records.length
+                records[index] = { ...record, ...indexer }
+                await this.save(records)
+            }
+        } finally {
+            release()
         }
     }
   
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
-        const records = await this.load()
-        let index = records.findIndex(this.keyPredicate(indexer))
-        if (index !== -1 || options?.upsert) {
-            if (index < 0) index = records.length
-            records[index] = { ...records[index], ...record }
-            await this.save(records)
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            let index = records.findIndex(this.keyPredicate(indexer))
+            if (index !== -1 || options?.upsert) {
+                if (index < 0) index = records.length
+                records[index] = { ...records[index], ...record }
+                await this.save(records)
+            }
+        } finally {
+            release()
         }
     }
 
     async deleteOne(indexer: Keyed<T>): Promise<void> {
-        const records = await this.load()
-        const index = records.findIndex(this.keyPredicate(indexer))
-        if (index !== -1) {
-            records.splice(index, 1)
-            await this.save(records)
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            const index = records.findIndex(this.keyPredicate(indexer))
+            if (index !== -1) {
+                records.splice(index, 1)
+                await this.save(records)
+            }
+        } finally {
+            release()
         }
     }
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
-        const records = await this.load()
-        const index = records.findIndex(this.keyPredicate(indexer))
-        if (index !== -1) {
-            const record = records[index]
-            records.splice(index, 1)
-            await this.save(records)
-            return { value: record as T }
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            const index = records.findIndex(this.keyPredicate(indexer))
+            if (index !== -1) {
+                const record = records[index]
+                records.splice(index, 1)
+                await this.save(records)
+                return { value: record as T }
+            }
+            return null
+        } finally {
+            release()
         }
-        return null
     }
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
-        const records = await this.load()
-        return records.find(this.keyPredicate(indexer)) as T
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            return records.find(this.keyPredicate(indexer)) as T
+        } finally {
+            release()
+        }
     }
 
     async find(indexer: Keyed<T>): Promise<T[]> {
-        const records = await this.load()
-        return records.filter(this.keyPredicate(indexer)).map((r) => r as T)
+        const release = await lockfile.lock(this.filePath);
+        try {
+            const records = await this.load()
+            return records.filter(this.keyPredicate(indexer)).map((r) => r as T)
+        } finally {
+            release()
+        }
     }
 
     async drop(): Promise<void> {
-        await unlink(this.filePath)
+        const release = await lockfile.lock(this.filePath);
+        try {
+            await unlink(this.filePath)
+        } finally {
+            release()
+        }        
     }
 }
 

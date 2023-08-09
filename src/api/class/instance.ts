@@ -82,6 +82,7 @@ class WhatsAppInstance {
         qr: '',
         messages: <WAMessage[]>[],
         qrRetry: 0,
+        initRetry: 0,
         sock: <WASocket | null>null,
         online: false,
     }
@@ -160,6 +161,7 @@ class WhatsAppInstance {
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
+            logger.info(`STATE: ${connection}`)
 
             if (connection === 'connecting') return
 
@@ -169,10 +171,17 @@ class WhatsAppInstance {
                     (lastDisconnect?.error as Boom)?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
+                    this.instance.initRetry++
+                    if (this.instance.initRetry >= Number(config.instance.maxRetryInit)) {
                     await this.init()
                 } else {
                     await this.drop()
-                    logger.info('STATE: Dropped collection')
+                        logger.info('STATE: Init failure')
+                        this.instance.online = false
+                    }
+                } else {
+                    await this.drop()
+                    logger.info('STATE: Logged off')
                     this.instance.online = false
                 }
 

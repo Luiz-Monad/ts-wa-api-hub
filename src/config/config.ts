@@ -15,7 +15,8 @@ const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || true
 // ==================================
 // INSTANCE CONFIGURATION
 // ==================================
-const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 3
+const INSTANCE_MAX_RETRY_QR = process.env.INSTANCE_MAX_RETRY_QR || 5
+const INSTANCE_MAX_RETRY_INIT = process.env.INSTANCE_MAX_RETRY_INIT || 5
 const RESTORE_SESSIONS_ON_START_UP = !!(process.env.RESTORE_SESSIONS_ON_START_UP && process.env.RESTORE_SESSIONS_ON_START_UP === 'true')
 
 // ==================================
@@ -88,6 +89,7 @@ export default {
     },
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
+        maxRetryInit: INSTANCE_MAX_RETRY_INIT,
         restoreSessionsOnStartup: RESTORE_SESSIONS_ON_START_UP,
         markMessagesRead: MARK_MESSAGES_READ,        
     },

@@ -1,6 +1,5 @@
 {
     "watch": ["lib", ".env"],
     "ignore": [],
-    "ext": "js",
-    "exec": "node lib/server.js"
+    "ext": "js"
 }

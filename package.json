@@ -4,16 +4,21 @@
     "description": "whatsapp-api-nodejs is builton top of Baileys-MD.",
     "main": "server.js",
     "scripts": {
-        "start": "yarn build:tsc && yarn build:ejs && node lib/server.js",
-        "debug": "yarn build:tsc && yarn build:ejs && node --inspect-brk lib/server.js",
+        "start": "yarn build && node lib/server.js",
+        "debug": "yarn build && node --inspect-brk lib/server.js",
+        "build": "yarn build:tsc && yarn build:ejs",
         "build:tsc": "tsc",
         "build:ejs": "copyfiles -u 1 \"./src/api/views/**/*.ejs\" \"./lib\"",
+        "watch": "concurrently \"yarn watch:tsc\" \"yarn sleep && yarn watch:node\"",
+        "watch:tsc": "tsc --watch",
+        "watch:node": "nodemon lib/server.js",
         "format:check": "prettier --check .",
         "format:write": "prettier --write .",
         "lint:check": "eslint .",
         "lint:fix": "eslint --fix .",
         "test": "ts-jest tests/*.test.ts --exit",
-        "configure-husky": "npx husky install && npx husky add .husky/pre-commit \"npx --no-install lint-staged\""
+        "configure-husky": "npx husky install && npx husky add .husky/pre-commit \"npx --no-install lint-staged\"",
+        "sleep": "node -e \"setTimeout(() => process.exit(0), 2000)\""
     },
     "husky": {
         "hooks": {
@@ -68,6 +73,7 @@
         "@types/ws": "^8.5.5",
         "@typescript-eslint/eslint-plugin": "^6.2.1",
         "@typescript-eslint/parser": "^6.2.1",
+        "concurrently": "^8.2.0",
         "copyfiles": "^2.4.1",
         "eslint": "^8.28.0",
         "eslint-config-prettier": "^8.5.0",

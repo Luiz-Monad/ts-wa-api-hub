@@ -70,6 +70,8 @@ const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') ||
 // ==================================
 // Enable or disable websockets globally on project
 const WEBSOCKET_ENABLED = !!(process.env.WEBSOCKET_ENABLED && process.env.WEBSOCKET_ENABLED === 'true')
+// allowed events which should be sent to websocket
+const WEBSOCKET_ALLOWED_EVENTS = process.env.WEBSOCKET_ALLOWED_EVENTS?.split(',') || ['all']
 
 // ==================================
 // MESSAGE CONFIGURATION
@@ -125,5 +127,6 @@ export default {
     webhookBase64: WEBHOOK_BASE64,
     webhookAllowedEvents: WEBHOOK_ALLOWED_EVENTS,
     websocketEnabled: WEBSOCKET_ENABLED,
+    websocketAllowedEvents: WEBSOCKET_ALLOWED_EVENTS,
     protectRoutes: PROTECT_ROUTES,
 }

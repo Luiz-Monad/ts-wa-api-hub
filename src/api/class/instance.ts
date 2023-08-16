@@ -62,6 +62,59 @@ export interface MessageKey {
     participant?: string | null
 }
 
+const callBackFilters = {
+    'connection:close': [
+        'all',
+        'connection',
+        'connection.update',
+        'connection:close',
+    ],    
+    'connection:open': [
+        'all',
+        'connection',
+        'connection.update',
+        'connection:open',
+    ],
+    'presence': [
+        'all', 
+        'presence', 
+        'presence.update',
+    ],
+    'message': [
+        'all', 
+        'messages', 
+        'messages.upsert',
+    ],
+    'call_offer': [
+        'all', 
+        'call', 
+        'CB:call', 
+        'call:offer',
+    ],
+    'call_terminate': [
+        'all',
+        'call', 
+        'call:terminate',
+    ],
+    'group_created': [
+        'all', 
+        'groups', 
+        'groups.upsert',
+    ],
+    'group_updated': [
+        'all', 
+        'groups', 
+        'groups.update',
+    ],
+    'group_participants_updated': [
+        'all',
+        'groups',
+        'group_participants',
+        'group-participants',
+        'group-participants.update',
+    ]
+}
+
 class WhatsAppInstance {
     app: AppType
     socketConfig = {
@@ -96,9 +149,21 @@ class WhatsAppInstance {
         if (allowWebsocket) this.webSocketInstance = this.webSocketInstance.enable()
     }
 
-    async _sendCallback(type: string, body: any, key: string) {
-        this.webHookInstance?.sendCallback(type, body, key)
-        this.webSocketInstance?.sendCallback(type, body, key)
+    async _sendCallback(type: keyof typeof callBackFilters, body: any, key: string) {
+        logger.debug(body, `callback: ${type}`)
+        const cb = type.split(':')[0]
+
+        if (
+            callBackFilters[type].some((e) => config.websocketAllowedEvents.includes(e))
+        ) {
+            this.webSocketInstance?.sendCallback(cb, body, key)  
+        }
+
+        if (
+            callBackFilters[type].some((e) => config.webhookAllowedEvents.includes(e))
+        ) {
+            this.webHookInstance?.sendCallback(cb, body, key)       
+        }
     }
 
     async init() {
@@ -133,7 +198,7 @@ class WhatsAppInstance {
             // 'contacts.upsert',
             // 'contacts.update',
             'messages.delete',
-            // 'messages.update',
+            'messages.update',
             // 'messages.media-update',
             'messages.upsert',
             // 'messages.reaction',
@@ -184,22 +249,13 @@ class WhatsAppInstance {
                     logger.info('STATE: Logged off')
                     this.instance.online = false
                 }
-
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:close',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
+                await this._sendCallback(
+                    'connection:close',
+                    {
+                        connection: connection,
+                    },
+                    this.key
                 )
-                    await this._sendCallback(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
             } else if (connection === 'open') {
                 if (config.database.enabled) {
                     const alreadyThere = await this.db.Chat.findOne({ key: this.key })
@@ -209,21 +265,13 @@ class WhatsAppInstance {
                     }
                 }
                 this.instance.online = true
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:open',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
+                await this._sendCallback(
+                    'connection:open',
+                    {
+                        connection: connection,
+                    },
+                    this.key
                 )
-                    await this._sendCallback(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
             }
 
             if (qr) {
@@ -249,16 +297,14 @@ class WhatsAppInstance {
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
-            if (
-                ['all', 'presence', 'presence.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this._sendCallback('presence', json, this.key)
+            logger.debug(json, 'presence.update')
+            await this._sendCallback('presence', json, this.key)
         })
 
         // on receive all chats
-        sock?.ev.on('messaging-history.set', async ({ chats }) => {
+        sock?.ev.on('messaging-history.set', async (ev) => {
+            logger.debug(ev, 'messaging-history.set')
+            const { chats } = ev
             this.instance.chats = []
             const receivedChats = chats.map((chat) => {
                 return {
@@ -275,8 +321,7 @@ class WhatsAppInstance {
 
         // on receive new chat
         sock?.ev.on('chats.upsert', (newChat) => {
-            //console.log('chats.upsert')
-            //console.log(newChat)
+            logger.debug(newChat, 'chats.upsert')
             const chats = newChat.map((chat) => {
                 return {
                     ...chat,
@@ -290,8 +335,7 @@ class WhatsAppInstance {
 
         // on chat change
         sock?.ev.on('chats.update', (changedChat) => {
-            //console.log('chats.update')
-            //console.log(changedChat)
+            logger.debug(changedChat, 'chats.update')
             changedChat.map((chat) => {
                 const index = this.instance.chats.findIndex((pc) => pc.id === chat.id)
                 const PrevChat = this.instance.chats[index]
@@ -307,8 +351,7 @@ class WhatsAppInstance {
 
         // on chat delete
         sock?.ev.on('chats.delete', (deletedChats) => {
-            //console.log('chats.delete')
-            //console.log(deletedChats)
+            logger.debug(deletedChats, 'chats.delete')
             deletedChats.map((chat) => {
                 const index = this.instance.chats.findIndex((c) => c.id === chat)
                 this.instance.chats.splice(index, 1)
@@ -317,8 +360,7 @@ class WhatsAppInstance {
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            //console.log('messages.upsert')
-            //console.log(m)
+            logger.debug(m, 'messages.upsert')
             if (m.type === 'append') this.instance.messages.push(...m.messages)
 
             if (m.type !== 'notify') return
@@ -349,7 +391,7 @@ class WhatsAppInstance {
                 )
                     return
 
-                const webhookData = {
+                const data = {
                     ...{ key: this.key },
                     ...msg,
                     messageKey: msg.key,
@@ -359,150 +401,113 @@ class WhatsAppInstance {
                 }
 
                 if (messageType === 'conversation') {
-                    webhookData.text = m
+                    data.text = m
                 }
                 if (config.webhookBase64) {
                     switch (messageType) {
                         case 'imageMessage':
-                            webhookData.msgContent = await downloadMessage(
+                            data.msgContent = await downloadMessage(
                                 msg.message.imageMessage!,
                                 'image'
                             )
                             break
                         case 'videoMessage':
-                            webhookData.msgContent = await downloadMessage(
+                            data.msgContent = await downloadMessage(
                                 msg.message.videoMessage!,
                                 'video'
                             )
                             break
                         case 'audioMessage':
-                            webhookData.msgContent = await downloadMessage(
+                            data.msgContent = await downloadMessage(
                                 msg.message.audioMessage!,
                                 'audio'
                             )
                             break
                         default:
-                            webhookData.msgContent = ''
+                            data.msgContent = ''
                             break
                     }
                 }
-                if (
-                    ['all', 'messages', 'messages.upsert'].some((e) =>
-                        config.webhookAllowedEvents.includes(e)
-                    )
-                )
-                    await this._sendCallback('message', webhookData, this.key)
+                await this._sendCallback('message', data, this.key)
             })
         })
 
         sock?.ev.on('messages.update', async (messages) => {
-            //console.log('messages.update')
-            //console.dir(messages);
+            logger.debug(messages, 'messages.update')
         })
 
         sock?.ws.on('CB:call', async (data) => {
             if (data.content) {
+                logger.debug(data.content, 'CB:call')
                 if (data.content.find((e: { tag: string }) => e.tag === 'offer')) {
                     const content = data.content.find((e: { tag: string }) => e.tag === 'offer')
-                    if (
-                        ['all', 'call', 'CB:call', 'call:offer'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this._sendCallback(
-                            'call_offer',
-                            {
-                                id: content.attrs['call-id'],
-                                timestamp: parseInt(data.attrs.t),
-                                user: {
-                                    id: data.attrs.from,
-                                    platform: data.attrs.platform,
-                                    platform_version: data.attrs.version,
-                                },
+                    await this._sendCallback(
+                        'call_offer',
+                        {
+                            id: content.attrs['call-id'],
+                            timestamp: parseInt(data.attrs.t),
+                            user: {
+                                id: data.attrs.from,
+                                platform: data.attrs.platform,
+                                platform_version: data.attrs.version,
                             },
-                            this.key
-                        )
+                        },
+                        this.key
+                    )
                 } else if (data.content.find((e: { tag: string }) => e.tag === 'terminate')) {
                     const content = data.content.find(
                         (e: { tag: string }) => e.tag === 'terminate'
                     )
-
-                    if (
-                        ['all', 'call', 'call:terminate'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this._sendCallback(
-                            'call_terminate',
-                            {
-                                id: content.attrs['call-id'],
-                                user: {
-                                    id: data.attrs.from,
-                                },
-                                timestamp: parseInt(data.attrs.t),
-                                reason: data.content[0].attrs.reason,
+                    await this._sendCallback(
+                        'call_terminate',
+                        {
+                            id: content.attrs['call-id'],
+                            user: {
+                                id: data.attrs.from,
                             },
-                            this.key
-                        )
+                            timestamp: parseInt(data.attrs.t),
+                            reason: data.content[0].attrs.reason,
+                        },
+                        this.key
+                    )
                 }
             }
         })
 
         sock?.ev.on('groups.upsert', async (newChat) => {
-            //console.log('groups.upsert')
-            //console.log(newChat)
+            logger.debug(newChat, 'groups.upsert')
             this.createGroupByApp(newChat)
-            if (
-                ['all', 'groups', 'groups.upsert'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
+            await this._sendCallback(
+                'group_created',
+                {
+                    data: newChat,
+                },
+                this.key
             )
-                await this._sendCallback(
-                    'group_created',
-                    {
-                        data: newChat,
-                    },
-                    this.key
-                )
         })
 
         sock?.ev.on('groups.update', async (newChat) => {
-            //console.log('groups.update')
-            //console.log(newChat)
+            logger.debug(newChat, 'groups.update')
             this._updateGroupSubjectByApp(newChat)
-            if (
-                ['all', 'groups', 'groups.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
+            await this._sendCallback(
+                'group_updated',
+                {
+                    data: newChat,
+                },
+                this.key
             )
-                await this._sendCallback(
-                    'group_updated',
-                    {
-                        data: newChat,
-                    },
-                    this.key
-                )
         })
 
         sock?.ev.on('group-participants.update', async (newChat) => {
-            //console.log('group-participants.update')
-            //console.log(newChat)
+            logger.debug(newChat, 'group-participants.update')
             this._updateGroupParticipantsByApp(newChat)
-            if (
-                [
-                    'all',
-                    'groups',
-                    'group_participants',
-                    'group-participants.update',
-                ].some((e) => config.webhookAllowedEvents.includes(e))
+            await this._sendCallback(
+                'group_participants_updated',
+                {
+                    data: newChat,
+                },
+                this.key
             )
-                await this._sendCallback(
-                    'group_participants_updated',
-                    {
-                        data: newChat,
-                    },
-                    this.key
-                )
         })
     }
 
@@ -515,7 +520,7 @@ class WhatsAppInstance {
         try {
             await this.db.Chat.findOneAndDelete({ key: key })
         } catch (e) {
-            logger.error('Error updating document failed')
+            logger.error(e, 'Error updating document failed')
         }
     }
 
@@ -674,7 +679,7 @@ class WhatsAppInstance {
             const res = await this.instance.sock?.updateProfilePicture(id, img.data)
             return res
         } catch (e) {
-            //console.log(e)
+            logger.warn(e)
             return {
                 error: true,
                 message: 'Unable to update profile picture',
@@ -690,8 +695,7 @@ class WhatsAppInstance {
             if (!group) throw new Error('unable to get group, check if the group exists')
             return group
         } catch (e) {
-            logger.error(e)
-            logger.error('Error get group failed')
+            logger.error(e, 'Error get group failed')
         }
     }
 
@@ -731,8 +735,7 @@ class WhatsAppInstance {
                 await this._updateDb(chats)
             }
         } catch (e) {
-            logger.error(e)
-            logger.error('Error updating groups failed')
+            logger.error(e, 'Error updating groups failed')
         }
     }
 
@@ -744,8 +747,7 @@ class WhatsAppInstance {
             )
             return group
         } catch (e) {
-            logger.error(e)
-            logger.error('Error create new group failed')
+            logger.error(e, 'Error create new group failed')
         }
     }
 
@@ -822,8 +824,7 @@ class WhatsAppInstance {
             if (!group) throw new Error('no group exists')
             return await this.instance.sock?.groupLeave(id)
         } catch (e) {
-            logger.error(e)
-            logger.error('Error leave group failed')
+            logger.error(e, 'Error leave group failed')
         }
     }
 
@@ -835,8 +836,7 @@ class WhatsAppInstance {
                 throw new Error('unable to get invite code, check if the group exists')
             return await this.instance.sock?.groupInviteCode(id)
         } catch (e) {
-            logger.error(e)
-            logger.error('Error get invite group failed')
+            logger.error(e, 'Error get invite group failed')
         }
     }
 
@@ -844,8 +844,7 @@ class WhatsAppInstance {
         try {
             return await this.instance.sock?.groupInviteCode(id)
         } catch (e) {
-            logger.error(e)
-            logger.error('Error get invite group failed')
+            logger.error(e, 'Error get invite group failed')
         }
     }
 
@@ -870,8 +869,7 @@ class WhatsAppInstance {
             chats?.push(group)
             await this._updateDb(chats)
         } catch (e) {
-            logger.error(e)
-            logger.error('Error updating document failed')
+            logger.error(e, 'Error updating document failed')
         }
     }
 
@@ -885,8 +883,7 @@ class WhatsAppInstance {
                 await this._updateDb(chats)
             }
         } catch (e) {
-            logger.error(e)
-            logger.error('Error updating document failed')
+            logger.error(e, 'Error updating document failed')
         }
     }
 
@@ -948,8 +945,7 @@ class WhatsAppInstance {
                 }
             }
         } catch (e) {
-            logger.error(e)
-            logger.error('Error updating document failed')
+            logger.error(e, 'Error updating document failed')
         }
     }
 
@@ -958,7 +954,7 @@ class WhatsAppInstance {
             const result = await this.instance.sock?.groupFetchAllParticipating()
             return result
         } catch (e) {
-            logger.error('Error group fetch all participating failed')
+            logger.error(e, 'Error group fetch all participating failed')
         }
     }
 
@@ -1052,7 +1048,7 @@ class WhatsAppInstance {
             const res = await this.instance.sock?.readMessages([key])
             return res
         } catch (e) {
-            logger.error('Error read message failed')
+            logger.error(e, 'Error read message failed')
         }
     }
 
@@ -1070,7 +1066,7 @@ class WhatsAppInstance {
             )
             return res
         } catch (e) {
-            logger.error('Error react message failed')
+            logger.error(e, 'Error react message failed')
         }
     }
 }

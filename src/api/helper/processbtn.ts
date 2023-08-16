@@ -14,7 +14,7 @@ export default function processButton(buttons?: ButtonDef[]) {
     const preparedButtons: Button[] = []
 
     buttons?.map((button) => {
-        if (button.type == 'replyButton') {
+        if (button.type === 'replyButton') {
             preparedButtons.push({
                 quickReplyButton: {
                     displayText: button.title ?? '',
@@ -22,7 +22,7 @@ export default function processButton(buttons?: ButtonDef[]) {
             })
         }
 
-        if (button.type == 'callButton') {
+        if (button.type === 'callButton') {
             preparedButtons.push({
                 callButton: {
                     displayText: button.title ?? '',
@@ -30,7 +30,7 @@ export default function processButton(buttons?: ButtonDef[]) {
                 },
             })
         }
-        if (button.type == 'urlButton') {
+        if (button.type === 'urlButton') {
             preparedButtons.push({
                 urlButton: {
                     displayText: button.title ?? '',

@@ -75,6 +75,13 @@ export function getWaLogger() {
     }, getStream())
 }
 
+export function getWaCacheLogger() {
+    return pino({
+        name: `cache`,
+        level: config.log.waLevel,
+    }, getStream())
+}
+
 export default function getLogger(name: string) {
     return pino({
         name: name,

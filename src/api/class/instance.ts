@@ -1,6 +1,6 @@
 import QRCode from 'qrcode'
 import { Boom } from '@hapi/boom'
-import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, default as makeWASocket } from '@whiskeysockets/baileys'
+import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, makeCacheableSignalKeyStore, default as makeWASocket } from '@whiskeysockets/baileys'
 import { v4 as uuidv4 } from 'uuid'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import generateVC, { VCardData } from '../helper/genVc'
@@ -14,7 +14,7 @@ import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
 import Database from '../models/db.model'
-import getLogger, { getWaLogger } from '../../config/logging'
+import getLogger, { getWaCacheLogger, getWaLogger } from '../../config/logging'
 import { CallBackType } from './callback'
 import axios from 'axios'
 
@@ -72,7 +72,7 @@ class WhatsAppInstance {
         logger: getWaLogger(),
     }
     key: string
-    authState: AuthState = <AuthState>{}
+    authState: AuthState | null = null
     db: Database = <Database>{}
     webHookInstance: WebHook | null = null
     webSocketInstance: WebSocket | null = null
@@ -107,8 +107,13 @@ class WhatsAppInstance {
         try {
             this.db = getDatabaseService(this.app)
             this.authState = await useAuthState(this.app, this.key)
+            const state = this.authState.readState()
             const socketConfig = {
-                auth: this.authState.state,
+                auth: {
+                    creds: state.creds,
+                    /** caching makes the store faster to send/recv messages */
+                    keys: makeCacheableSignalKeyStore(state.keys, getWaCacheLogger()),
+                },
                 browser: <[string, string, string]>Object.values(config.browser),
                 ...this.socketConfig,
             }
@@ -124,8 +129,9 @@ class WhatsAppInstance {
 
     async _drop() {
         try {
-            this.authState = await useAuthState(this.app, this.key)
-            this.authState.dropCreds()
+            if (this.authState) {
+                this.authState.dropCreds()
+            }
             return this
         } catch (e) {
             logger.error(e, 'Error dropping auth state')
@@ -162,12 +168,9 @@ class WhatsAppInstance {
 
         // on credentials update save state
         sock?.ev.on('creds.update', async (creds) => {
-            if (this.authState?.state)
-                this.authState.state.creds = {
-                    ...this.authState.state.creds,
-                    ...creds,
-                }
-            this.authState?.saveCreds()
+            if (this.authState) {
+                this.authState.saveCreds()
+            }
         })
 
         // on socket closed, opened, connecting

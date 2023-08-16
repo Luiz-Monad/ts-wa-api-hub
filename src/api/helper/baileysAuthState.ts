@@ -75,8 +75,9 @@ export default async function useAuthState(app: AppType, key: string) {
     }
     const readData = async (id: string) => {
         try {
-            const data = JSON.stringify(await table.findOne({ _id: id }))
-            return JSON.parse(data, BufferJSON.reviver)
+            const data = await table.findOne({ _id: id })
+            if (!data) return null
+            return JSON.parse(JSON.stringify(data), BufferJSON.reviver)
         } catch (error) {
             logger.warn(error)
             return null
@@ -99,7 +100,7 @@ export default async function useAuthState(app: AppType, key: string) {
     }
     const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds()
     return {
-        state: {
+        readState: () => ({
             creds,
             keys: {
                 get: async (type: string, ids: string[]) => {
@@ -107,7 +108,7 @@ export default async function useAuthState(app: AppType, key: string) {
                     await Promise.all(
                         ids.map(async (id) => {
                             let value = await readData(`${type}-${id}`)
-                            if (type === 'app-state-sync-key') {
+                            if (type === 'app-state-sync-key' && value) {
                                 value = proto.Message.AppStateSyncKeyData.fromObject(data)
                             }
                             data[id] = value
@@ -127,7 +128,7 @@ export default async function useAuthState(app: AppType, key: string) {
                     await Promise.all(tasks)
                 },
             },
-        },
+        }),
         saveCreds: () => {
             return writeData(creds, 'creds')
         },

@@ -68,7 +68,7 @@ class WhatsAppInstance {
     app: AppType
     socketConfig = {
         connectTimeoutMs: 2 * 60 * 1000,
-        defaultQueryTimeoutMs: 2 * 1000,
+        defaultQueryTimeoutMs: 20 * 1000,
         printQRInTerminal: true,
     }
     key: string

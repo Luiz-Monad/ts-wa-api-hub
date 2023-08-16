@@ -168,6 +168,7 @@ class WhatsAppInstance {
 
         // on credentials update save state
         sock?.ev.on('creds.update', async (creds) => {
+            logger.debug(creds, 'creds.update')
             if (this.authState) {
                 this.authState.saveCreds()
             }
@@ -175,6 +176,7 @@ class WhatsAppInstance {
 
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
+            logger.debug(update, 'connection.update')
             const { connection, lastDisconnect, qr } = update
             logger.info(`STATE: ${connection}`)
 
@@ -382,13 +384,19 @@ class WhatsAppInstance {
             })
         })
 
+        // on mssage change
         sock?.ev.on('messages.update', async (messages) => {
             logger.debug(messages, 'messages.update')
         })
 
+        // on mssage delete
+        sock?.ev.on('messages.delete', async (messages) => {
+            logger.debug(messages, 'messages.delete')
+        })
+
         sock?.ws.on('CB:call', async (data) => {
+            logger.debug(data, 'CB:call')
             if (data.content) {
-                logger.debug(data.content, 'CB:call')
                 if (data.content.find((e: { tag: string }) => e.tag === 'offer')) {
                     const content = data.content.find((e: { tag: string }) => e.tag === 'offer')
                     await this._sendCallback(

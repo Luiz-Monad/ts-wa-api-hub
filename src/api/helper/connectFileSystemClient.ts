@@ -73,7 +73,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
-        logger.debug([indexer, record, options], 'replace one')
+        logger.debug({indexer, record, options}, 'replace one')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -91,7 +91,7 @@ class FsTable<T> extends Table<T> {
     }
   
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
-        logger.debug([indexer, record, options], 'update one')
+        logger.debug({indexer, record, options}, 'update one')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -110,7 +110,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async deleteOne(indexer: Keyed<T>): Promise<void> {
-        logger.debug([indexer], 'delete one')
+        logger.debug({indexer}, 'delete one')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -128,7 +128,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
-        logger.debug([indexer], 'find and delete one')
+        logger.debug({indexer}, 'find and delete one')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -149,7 +149,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
-        logger.debug([indexer], 'find one')
+        logger.debug({indexer}, 'find one')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -163,7 +163,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async find(indexer: Keyed<T>): Promise<T[]> {
-        logger.debug([indexer], 'find query')
+        logger.debug({indexer}, 'find query')
         const release = await this.lock()
         try {
             const records = await this.load()
@@ -177,7 +177,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async drop(): Promise<void> {
-        logger.debug([], 'drop table')
+        logger.debug({}, 'drop table')
         const release = await this.lock()
         try {
             await unlink(this.filePath)
@@ -203,7 +203,7 @@ class FsDatabase extends Database {
     async listTable(): Promise<Table<any>[]> {
         const fileNames = await readdir(this.directory)
         return fileNames
-            .filter((name) => name.endsWith('.json'))
+            .filter((name) => name !== 'Chat.json' && name.endsWith('.json'))
             .map((name) => this.table(path.basename(name, '.json')))
     }
 
@@ -218,6 +218,7 @@ export default async function connectFileSystemClient(app: AppType) {
 
     try {
         await mkdir(path, { recursive: true })
+        logger.info('STATE: Successfully connected to file system')
         return new FsDatabase(path, options)
     } catch (error) {
         logger.error('STATE: Connection to file system failed!', error)

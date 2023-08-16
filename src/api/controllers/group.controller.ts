@@ -53,13 +53,8 @@ export const getInstanceInviteCodeGroup: ReqHandler = async (req, res) => {
 
 export const getAllGroups: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
-    let data
-    try {
-        data = await instance.groupFetchAllParticipating()
-    } catch (error) {
-        data = {}
-    }
-    return res.json({
+    const data = await instance.groupFetchAllParticipating()
+    return res.status(201).json({
         error: false,
         message: 'Instance fetched successfully',
         instance_data: data,
@@ -104,7 +99,7 @@ export const groupInviteInfo: ReqHandler = async (req, res) => {
     //     req.body.code
     // )
     const data = {}
-    return res.status(201).json({ error: false, data: data })
+    return res.status(200).json({ error: false, data: data })
 }
 
 export const groupJoin: ReqHandler = async (req, res) => {
@@ -112,5 +107,5 @@ export const groupJoin: ReqHandler = async (req, res) => {
     //     req.body.code
     // )
     const data = {}
-    return res.status(201).json({ error: false, data: data })
+    return res.status(200).json({ error: false, data: data })
 }

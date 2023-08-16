@@ -61,7 +61,6 @@ export const Mediaurl: ReqHandler = async (req, res) => {
 }
 
 export const Button: ReqHandler = async (req, res) => {
-    // console.log(res.body)
     const data = await getInstanceForReq(req).sendButtonMessage(
         req.body.id,
         req.body.btndata

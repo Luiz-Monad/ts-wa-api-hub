@@ -2,9 +2,7 @@ import { ReqHandler } from '../helper/types'
 import getInstanceForReq from '../service/instance'
 
 export const onWhatsapp: ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req)?.verifyId(
-        getInstanceForReq(req)?.getWhatsAppId(<string>req.query.id)
-    )
+    const data = await getInstanceForReq(req)?.onWhatsApp(<string>req.query.id)
     return res.status(201).json({ error: false, data: data })
 }
 
@@ -23,7 +21,7 @@ export const blockUser: ReqHandler = async (req, res) => {
         <string>req.query.id,
         <'block' | 'unblock'>(<string>req.query.block_status)
     )
-    if (req.query.block_status == 'block') {
+    if (req.query.block_status === 'block') {
         return res.status(201).json({ error: false, message: 'Contact Blocked' })
     } else {
         return res.status(201).json({ error: false, message: 'Contact Unblocked' })

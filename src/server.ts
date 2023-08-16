@@ -28,17 +28,6 @@ server.listen(config.port, async () => {
     await initWebSocketService(app, server)
 })
 
-const exitHandler = () => {
-    if (server) {
-        server.close(() => {
-            logger.info('Server closed')
-            process.exit(1)
-        })
-    } else {
-        process.exit(1)
-    }
-}
-
 const unexpectedErrorHandler: ErrHandler = (error) => {
     logger.error(error)
 }

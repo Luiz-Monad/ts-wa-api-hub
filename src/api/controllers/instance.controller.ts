@@ -14,7 +14,7 @@ export const init: ReqHandler = async (req, res) => {
     const instance = new WhatsAppInstance(req.app, key, webhook, webhookUrl, websocket)
     const data = await instance.init()
     let instances = getInstanceService(req.app).instances
-    instances[data.key] = instance
+    instances[data.key] = data
     res.json({
         error: false,
         message: 'Initializing successfully',
@@ -75,12 +75,7 @@ export const qrurl: ReqHandler = async (req, res) => {
 
 export const info: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
-    let data
-    try {
-        data = await instance.getInstanceDetail(<string>req.query.key)
-    } catch (error) {
-        data = {}
-    }
+    const data = await instance.getInstanceDetail(<string>req.query.key)
     return res.json({
         error: false,
         message: 'Instance fetched successfully',
@@ -89,17 +84,13 @@ export const info: ReqHandler = async (req, res) => {
 }
 
 export const restore: ReqHandler = async (req, res, next) => {
-    try {
-        const session = new Session(req.app)
-        const restoredSessions = await session.restoreSessions()
-        return res.json({
-            error: false,
-            message: 'All instances restored',
-            data: restoredSessions,
-        })
-    } catch (error) {
-        next(error)
-    }
+    const session = new Session(req.app)
+    const restoredSessions = await session.restoreSessions()
+    return res.json({
+        error: false,
+        message: 'All instances restored',
+        data: restoredSessions,
+    })
 }
 
 export const logout: ReqHandler = async (req, res) => {

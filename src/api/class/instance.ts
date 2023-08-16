@@ -167,22 +167,32 @@ class WhatsAppInstance {
     }
 
     async init() {
-        this.db = getDatabaseService(this.app)
-        this.authState = await useAuthState(this.app, this.key)
-        const socketConfig = {
-            auth: this.authState.state,
-            browser: <[string, string, string]>Object.values(config.browser),
-            ...this.socketConfig,
+        try {
+            this.db = getDatabaseService(this.app)
+            this.authState = await useAuthState(this.app, this.key)
+            const socketConfig = {
+                auth: this.authState.state,
+                browser: <[string, string, string]>Object.values(config.browser),
+                ...this.socketConfig,
+            }
+            this.instance.sock = makeWASocket(socketConfig)
+            this.setHandler()
+            return this
+        } catch (e) {
+            const msg = 'Error when creating instance'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
-        this.instance.sock = makeWASocket(socketConfig)
-        this.setHandler()
-        return this
     }
 
-    async drop() {
-        this.authState = await useAuthState(this.app, this.key)
-        this.authState.dropCreds()
-        return this
+    async _drop() {
+        try {
+            this.authState = await useAuthState(this.app, this.key)
+            this.authState.dropCreds()
+            return this
+        } catch (e) {
+            logger.error(e, 'Error dropping auth state')
+        }
     }
 
     setHandler() {
@@ -202,7 +212,7 @@ class WhatsAppInstance {
             // 'messages.media-update',
             'messages.upsert',
             // 'messages.reaction',
-            // 'message-receipt.update',
+            'message-receipt.update',
             'groups.upsert',
             'groups.update',
             'group-participants.update',
@@ -240,12 +250,12 @@ class WhatsAppInstance {
                     if (this.instance.initRetry < Number(config.instance.maxRetryInit)) {
                         await this.init()
                     } else {
-                        await this.drop()
+                        await this._drop()
                         logger.info('STATE: Init failure')
                         this.instance.online = false
                     }
                 } else {
-                    await this.drop()
+                    await this._drop()
                     logger.info('STATE: Logged off')
                     this.instance.online = false
                 }
@@ -476,7 +486,7 @@ class WhatsAppInstance {
 
         sock?.ev.on('groups.upsert', async (newChat) => {
             logger.debug(newChat, 'groups.upsert')
-            this.createGroupByApp(newChat)
+            this._createGroupByApp(newChat)
             await this._sendCallback(
                 'group_created',
                 {
@@ -520,7 +530,9 @@ class WhatsAppInstance {
         try {
             await this.db.Chat.findOneAndDelete({ key: key })
         } catch (e) {
-            logger.error(e, 'Error updating document failed')
+            const msg = 'Error when deleting instance'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -528,148 +540,235 @@ class WhatsAppInstance {
         return {
             instance_key: key,
             phone_connected: this.instance?.online,
-            webhookEnabled: this.webHookInstance?.allowCallback,
+            webhookEnabled: this.webHookInstance?.enabled,
             webhookUrl: this.webHookInstance?.webHookUrl,
-            websocketEnabled: this.webSocketInstance?.allowCallback,
+            webhookFilters: this.webHookInstance?.filters,
+            websocketEnabled: this.webSocketInstance?.enabled,
+            websocketFilters: this.webSocketInstance?.filters,
             user: this.instance?.online ? this.instance.sock?.user : {},
         }
     }
 
-    getWhatsAppId(id: string) {
+    _getWhatsAppId(id: string) {
         if (id.includes('@g.us') || id.includes('@s.whatsapp.net')) return id
         return id.includes('-') ? `${id}@g.us` : `${id}@s.whatsapp.net`
     }
 
-    async verifyId(id: string) {
+    async _verifyId(id: string) {
         if (id.includes('@g.us')) return true
         const [result] = (await this.instance.sock?.onWhatsApp(id)) ?? []
         if (result?.exists) return true
         throw new Error('no account exists')
     }
 
+    async onWhatsApp(to: string) {
+        try {
+            const data = await this._verifyId(this._getWhatsAppId(to))
+            return data
+        } catch (e) {
+            if ((e as Error).message === 'no account exists') return false
+            const msg = 'Unable to verify if user is on whatsapp'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
+    }
+
     async sendTextMessage(to: string, message: string) {
-        await this.verifyId(this.getWhatsAppId(to))
-        const data = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to), {
-            text: message,
-        })
-        return data
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
+
+            const data = await this.instance.sock?.sendMessage(
+                this._getWhatsAppId(to), {
+                text: message,
+            })
+            return data
+        } catch (e) {
+            const msg = 'Unable to send text message'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendMediaFile(to: string, file: FileType, type: MediaType, caption?: string, filename?: string) {
-        await this.verifyId(this.getWhatsAppId(to))
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
 
-        const data = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            processMessage({
-                type,
-                caption,
-                mimeType: file?.mimetype,
-                buffer: file?.stream,
-                fileName: filename ? filename : file?.originalname,
-            })
-        )
-        return data
+            const data = await this.instance.sock?.sendMessage(
+                this._getWhatsAppId(to),
+                processMessage({
+                    type,
+                    caption,
+                    mimeType: file?.mimetype,
+                    buffer: file?.stream,
+                    fileName: filename ? filename : file?.originalname,
+                })
+            )
+            return data
+        } catch (e) {
+            const msg = 'Unable to send media file'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendUrlMediaFile(to: string, url: string, type: MediaType, mimeType: string, caption?: string) {
-        await this.verifyId(this.getWhatsAppId(to))
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
 
-        const data = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to),
-            processMessage({
-                type,
-                caption,
-                url,
-                mimeType,
-            })
-        )
-        return data
+            const data = await this.instance.sock?.sendMessage(
+                this._getWhatsAppId(to),
+                processMessage({
+                    type,
+                    caption,
+                    url,
+                    mimeType,
+                })
+            )
+            return data
+        } catch (e) {
+            const msg = 'Unable to send url media file'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async downloadProfile(of: string) {
-        await this.verifyId(this.getWhatsAppId(of))
-        const ppUrl = await this.instance.sock?.profilePictureUrl(
-            this.getWhatsAppId(of),
-            'image'
-        )
-        return ppUrl
+        try {
+            await this._verifyId(this._getWhatsAppId(of))
+
+            const ppUrl = await this.instance.sock?.profilePictureUrl(
+                this._getWhatsAppId(of),
+                'image'
+            )
+            return ppUrl
+        } catch (e) {
+            const msg = `Unable to download user profile picture`
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async getUserStatus(of: string) {
-        await this.verifyId(this.getWhatsAppId(of))
-        const status = await this.instance.sock?.fetchStatus(this.getWhatsAppId(of))
-        return status
+        try {
+            await this._verifyId(this._getWhatsAppId(of))
+
+            const status = await this.instance.sock?.fetchStatus(this._getWhatsAppId(of))
+            return status
+        } catch (e) {
+            const msg = `Unable to get user status`
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async blockUnblock(to: string, data: Lock) {
-        await this.verifyId(this.getWhatsAppId(to))
-        const status = await this.instance.sock?.updateBlockStatus(
-            this.getWhatsAppId(to),
-            data
-        )
-        return status
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
+
+            const status = await this.instance.sock?.updateBlockStatus(
+                this._getWhatsAppId(to),
+                data
+            )
+            return status
+        } catch (e) {
+            const msg = `Unable to ${data} user`
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendButtonMessage(to: string, data: ButtonMessage) {
-        await this.verifyId(this.getWhatsAppId(to))
-        const result = await this.instance.sock?.sendMessage(
-            this.getWhatsAppId(to), {
-            templateButtons: processButton(data.buttons),
-            text: data.text ?? '',
-            footer: data.footerText ?? '',
-            viewOnce: true,
-        })
-        return result
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
+
+            const result = await this.instance.sock?.sendMessage(
+                this._getWhatsAppId(to), {
+                templateButtons: processButton(data.buttons),
+                text: data.text ?? '',
+                footer: data.footerText ?? '',
+                viewOnce: true,
+            })
+            return result
+        } catch (e) {
+            const msg = 'Unable to send button message'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendContactMessage(to: string, data: VCardData) {
-        await this.verifyId(this.getWhatsAppId(to))
-        const vcard = generateVC(data)
-        const result = await this.instance.sock?.sendMessage(
-            await this.getWhatsAppId(to),
-            {
-                contacts: {
-                    displayName: data.fullName,
-                    contacts: [{ displayName: data.fullName, vcard }],
-                },
-            }
-        )
-        return result
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
+
+            const vcard = generateVC(data)
+            const result = await this.instance.sock?.sendMessage(
+                await this._getWhatsAppId(to),
+                {
+                    contacts: {
+                        displayName: data.fullName,
+                        contacts: [{ displayName: data.fullName, vcard }],
+                    },
+                }
+            )
+            return result
+        } catch (e) {
+            const msg = 'Unable to send contact message'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendListMessage(to: string, data: ListMessage) {
-        await this.verifyId(this.getWhatsAppId(to))
-        const result = await this.instance.sock?.sendMessage(this.getWhatsAppId(to), {
-            text: data.text,
-            sections: data.sections,
-            buttonText: data.buttonText,
-            footer: data.description,
-            title: data.title,
-            viewOnce: true,
-        })
-        return result
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
+
+            const result = await this.instance.sock?.sendMessage(this._getWhatsAppId(to), {
+                text: data.text,
+                sections: data.sections,
+                buttonText: data.buttonText,
+                footer: data.description,
+                title: data.title,
+                viewOnce: true,
+            })
+            return result
+        } catch (e) {
+            const msg = 'Unable to send list message'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async sendMediaButtonMessage(to: string, data: MediaButtonMessage) {
-        await this.verifyId(this.getWhatsAppId(to))
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
 
-        const result = await this.instance.sock?.sendMessage(this.getWhatsAppId(to), {
-            image: { url: data.image! },
-            footer: data.footerText ?? '',
-            caption: data.text,
-            templateButtons: processButton(data.buttons),
-            mimetype: data.mimeType,
-            viewOnce: true,
-        })
-        return result
+            const result = await this.instance.sock?.sendMessage(this._getWhatsAppId(to), {
+                image: { url: data.image! },
+                footer: data.footerText ?? '',
+                caption: data.text,
+                templateButtons: processButton(data.buttons),
+                mimetype: data.mimeType,
+                viewOnce: true,
+            })
+            return result
+        } catch (e) {
+            const msg = 'Unable to send media button message'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async setStatus(status: Status, to: string) {
-        await this.verifyId(this.getWhatsAppId(to))
+        try {
+            await this._verifyId(this._getWhatsAppId(to))
 
-        const result = await this.instance.sock?.sendPresenceUpdate(status, to)
-        return result
+            const result = await this.instance.sock?.sendPresenceUpdate(status, to)
+            return result
+        } catch (e) {
+            const msg = 'Unable to set user status'
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     // change your display picture or a group's
@@ -679,11 +778,9 @@ class WhatsAppInstance {
             const res = await this.instance.sock?.updateProfilePicture(id, img.data)
             return res
         } catch (e) {
-            logger.warn(e)
-            return {
-                error: true,
-                message: 'Unable to update profile picture',
-            }
+            const msg = 'Unable to update profile picture'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -691,17 +788,19 @@ class WhatsAppInstance {
     async getUserOrGroupById(id: string) {
         try {
             const chats = await this._getChats()
-            const group = chats?.find((c) => c.id === this.getWhatsAppId(id))
+            const group = chats?.find((c) => c.id === this._getWhatsAppId(id))
             if (!group) throw new Error('unable to get group, check if the group exists')
             return group
         } catch (e) {
-            logger.error(e, 'Error get group failed')
+            const msg = 'Error get group failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     // Group Methods
     _parseParticipants(users: string[]) {
-        return users.map((users) => this.getWhatsAppId(users))
+        return users.map((users) => this._getWhatsAppId(users))
     }
 
     _toParticipants(participants: GroupParticipant[]) {
@@ -743,78 +842,81 @@ class WhatsAppInstance {
         try {
             const group = await this.instance.sock?.groupCreate(
                 name,
-                users.map(this.getWhatsAppId)
+                users.map(this._getWhatsAppId)
             )
             return group
         } catch (e) {
-            logger.error(e, 'Error create new group failed')
+            const msg = 'Error create new group failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async addNewParticipant(id: string, users: string[]) {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 this._parseParticipants(users),
                 'add'
             )
             return res
-        } catch {
-            return {
-                error: true,
-                message: 'Unable to add participant, you must be an admin in this group',
-            }
+        } catch (e) {
+            const msg = 'Unable to add participant, you must be an admin in this group'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async makeAdmin(id: string, users: string[]) {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 this._parseParticipants(users),
                 'promote'
             )
             return res
-        } catch {
-            return {
-                error: true,
-                message:
-                    'unable to promote some participants, check if you are admin in group or participants exists',
-            }
+        } catch (e) {
+            const msg = 'Unable to promote some participants, check if you are admin in group or participants exists'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async demoteAdmin(id: string, users: string[]) {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 this._parseParticipants(users),
                 'demote'
             )
             return res
-        } catch {
-            return {
-                error: true,
-                message:
-                    'unable to demote some participants, check if you are admin in group or participants exists',
-            }
+        } catch (e) {
+            const msg = 'Unable to demote some participants, check if you are admin in group or participants exists'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async getAllGroups() {
-        const chats = await this._getChats()
-        return chats
-            ?.filter((c) => c.id.includes('@g.us'))
-            .map((data, i) => {
-                return {
-                    index: i,
-                    name: data.name,
-                    jid: data.id,
-                    participant: data.participant,
-                    creation: data.creation,
-                    subjectOwner: data.subjectOwner,
-                }
-            })
+        try {
+            const chats = await this._getChats()
+            return chats
+                ?.filter((c) => c.id.includes('@g.us'))
+                .map((data, i) => {
+                    return {
+                        index: i,
+                        name: data.name,
+                        jid: data.id,
+                        participant: data.participant,
+                        creation: data.creation,
+                        subjectOwner: data.subjectOwner,
+                    }
+                })
+        } catch (e) {
+            const msg = 'Unable to list all chats'            
+            logger.error(e, msg)
+            throw new Error(msg)
+        }
     }
 
     async leaveGroup(id: string) {
@@ -824,7 +926,9 @@ class WhatsAppInstance {
             if (!group) throw new Error('no group exists')
             return await this.instance.sock?.groupLeave(id)
         } catch (e) {
-            logger.error(e, 'Error leave group failed')
+            const msg = 'Error leave group failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -836,7 +940,9 @@ class WhatsAppInstance {
                 throw new Error('unable to get invite code, check if the group exists')
             return await this.instance.sock?.groupInviteCode(id)
         } catch (e) {
-            logger.error(e, 'Error get invite group failed')
+            const msg = 'Error get invite group failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -844,7 +950,9 @@ class WhatsAppInstance {
         try {
             return await this.instance.sock?.groupInviteCode(id)
         } catch (e) {
-            logger.error(e, 'Error get invite group failed')
+            const msg = 'Error get instance invite code group failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -855,7 +963,7 @@ class WhatsAppInstance {
     }
 
     // create new group by application
-    async createGroupByApp(newChat: GroupMetadata[]) {
+    async _createGroupByApp(newChat: GroupMetadata[]) {
         try {
             const chats = await this._getChats()
             const group = {
@@ -874,7 +982,6 @@ class WhatsAppInstance {
     }
 
     async _updateGroupSubjectByApp(newChat: Partial<GroupMetadata>[]) {
-        //console.log(newChat)
         try {
             if (newChat[0] && newChat[0].subject) {
                 const chats = await this._getChats()
@@ -883,22 +990,21 @@ class WhatsAppInstance {
                 await this._updateDb(chats)
             }
         } catch (e) {
-            logger.error(e, 'Error updating document failed')
+            logger.error(e, 'Error updating group subjects')
         }
     }
 
     async _updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }) {
-        //console.log(newChat)
         try {
             if (newChat && newChat.id) {
                 let chats = await this._getChats()
                 const chat = chats?.find((c) => c.id === newChat.id)
                 let is_owner = false
                 if (chat) {
-                    if (chat.participant == undefined) {
+                    if (chat.participant === undefined) {
                         chat.participant = []
                     }
-                    if (chat.participant && newChat.action == 'add') {
+                    if (chat.participant && newChat.action === 'add') {
                         for (const participant of newChat.participants) {
                             chat.participant.push({
                                 id: participant,
@@ -906,10 +1012,10 @@ class WhatsAppInstance {
                             })
                         }
                     }
-                    if (chat.participant && newChat.action == 'remove') {
+                    if (chat.participant && newChat.action === 'remove') {
                         for (const participant of newChat.participants) {
                             // remove group if they are owner
-                            if (chat.subjectOwner == participant) {
+                            if (chat.subjectOwner === participant) {
                                 is_owner = true
                             }
                             chat.participant = chat.participant.filter(
@@ -917,20 +1023,20 @@ class WhatsAppInstance {
                             )
                         }
                     }
-                    if (chat.participant && newChat.action == 'demote') {
+                    if (chat.participant && newChat.action === 'demote') {
                         for (const participant of newChat.participants) {
-                            if (chat.participant.filter((p) => p.id == participant)[0]) {
+                            if (chat.participant.filter((p) => p.id === participant)[0]) {
                                 chat.participant.filter(
-                                    (p) => p.id == participant
+                                    (p) => p.id === participant
                                 )[0].admin = null
                             }
                         }
                     }
-                    if (chat.participant && newChat.action == 'promote') {
+                    if (chat.participant && newChat.action === 'promote') {
                         for (const participant of newChat.participants) {
-                            if (chat.participant.filter((p) => p.id == participant)[0]) {
+                            if (chat.participant.filter((p) => p.id === participant)[0]) {
                                 chat.participant.filter(
-                                    (p) => p.id == participant
+                                    (p) => p.id === participant
                                 )[0].admin = 'superadmin'
                             }
                         }
@@ -945,7 +1051,7 @@ class WhatsAppInstance {
                 }
             }
         } catch (e) {
-            logger.error(e, 'Error updating document failed')
+            logger.error(e, 'Error updating group participants')
         }
     }
 
@@ -954,7 +1060,9 @@ class WhatsAppInstance {
             const result = await this.instance.sock?.groupFetchAllParticipating()
             return result
         } catch (e) {
-            logger.error(e, 'Error group fetch all participating failed')
+            const msg = 'Error group fetch all participating failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -962,20 +1070,15 @@ class WhatsAppInstance {
     async groupParticipantsUpdate(id: string, users: string[], action: ParticipantAction) {
         try {
             const res = await this.instance.sock?.groupParticipantsUpdate(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 this._parseParticipants(users),
                 action
             )
             return res
         } catch (e) {
-            //console.log(e)
-            return {
-                error: true,
-                message:
-                    'unable to ' +
-                    action +
-                    ' some participants, check if you are admin in group or participants exists',
-            }
+            const msg = `Unable to ${action} some participants, check if you are admin in group or participants exists`
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -984,48 +1087,42 @@ class WhatsAppInstance {
     async groupSettingUpdate(id: string, action: GroupAction) {
         try {
             const res = await this.instance.sock?.groupSettingUpdate(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 action
             )
             return res
         } catch (e) {
-            //console.log(e)
-            return {
-                error: true,
-                message: 'unable to ' + action + ' check if you are admin in group',
-            }
+            const msg = `Unable to ${action} check if you are admin in group`
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async groupUpdateSubject(id: string, subject: string) {
         try {
             const res = await this.instance.sock?.groupUpdateSubject(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 subject
             )
             return res
         } catch (e) {
-            //console.log(e)
-            return {
-                error: true,
-                message: 'unable to update subject check if you are admin in group',
-            }
+            const msg = 'Unable to update subject check if you are admin in group'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
     async groupUpdateDescription(id: string, description?: string) {
         try {
             const res = await this.instance.sock?.groupUpdateDescription(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 description
             )
             return res
         } catch (e) {
-            //console.log(e)
-            return {
-                error: true,
-                message: 'unable to update description check if you are admin in group',
-            }
+            const msg = 'Unable to update description check if you are admin in group'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -1048,7 +1145,9 @@ class WhatsAppInstance {
             const res = await this.instance.sock?.readMessages([key])
             return res
         } catch (e) {
-            logger.error(e, 'Error read message failed')
+            const msg = 'Error read message failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 
@@ -1061,12 +1160,14 @@ class WhatsAppInstance {
                 },
             }
             const res = await this.instance.sock?.sendMessage(
-                this.getWhatsAppId(id),
+                this._getWhatsAppId(id),
                 reactionMessage
             )
             return res
         } catch (e) {
-            logger.error(e, 'Error react message failed')
+            const msg = 'Error react message failed'
+            logger.error(e, msg)
+            throw new Error(msg)
         }
     }
 }

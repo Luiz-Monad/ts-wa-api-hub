@@ -25,16 +25,19 @@ class Session {
             })
 
             for await (const key of allCollections) {
-                const query = {}
-                const _ = await db.table(key).find(query)
-                const instance = new WhatsAppInstance(this.app, key)
-                await instance.init()
-                instances[key] = instance
-                restoredSessions.push(key)
+                try {
+                    const query = {}
+                    const _ = await db.table(key).find(query)
+                    const instance = new WhatsAppInstance(this.app, key)
+                    await instance.init()
+                    instances[key] = instance
+                    restoredSessions.push(key)
+                } catch (e) {
+                    logger.error(e, `Error restoring session ${key}`)
+                }
             }
         } catch (e) {
-            logger.error('Error restoring sessions')
-            logger.error(e)
+            logger.error(e, 'Error restoring sessions')
         }
         return restoredSessions
     }

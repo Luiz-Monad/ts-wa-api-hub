@@ -15,6 +15,7 @@ import getWebSocketService, { WebSocket } from '../service/websocket'
 import processMessage, { MediaType } from '../helper/processmessage'
 import Database from '../models/db.model'
 import getLogger, { getWaLogger } from '../../config/logging'
+import { CallBackType } from './callback'
 import axios from 'axios'
 
 const logger = getLogger('instance')
@@ -62,59 +63,6 @@ export interface MessageKey {
     participant?: string | null
 }
 
-const callBackFilters = {
-    'connection:close': [
-        'all',
-        'connection',
-        'connection.update',
-        'connection:close',
-    ],    
-    'connection:open': [
-        'all',
-        'connection',
-        'connection.update',
-        'connection:open',
-    ],
-    'presence': [
-        'all', 
-        'presence', 
-        'presence.update',
-    ],
-    'message': [
-        'all', 
-        'messages', 
-        'messages.upsert',
-    ],
-    'call_offer': [
-        'all', 
-        'call', 
-        'CB:call', 
-        'call:offer',
-    ],
-    'call_terminate': [
-        'all',
-        'call', 
-        'call:terminate',
-    ],
-    'group_created': [
-        'all', 
-        'groups', 
-        'groups.upsert',
-    ],
-    'group_updated': [
-        'all', 
-        'groups', 
-        'groups.update',
-    ],
-    'group_participants_updated': [
-        'all',
-        'groups',
-        'group_participants',
-        'group-participants',
-        'group-participants.update',
-    ]
-}
-
 class WhatsAppInstance {
     app: AppType
     socketConfig = {
@@ -149,21 +97,10 @@ class WhatsAppInstance {
         if (allowWebsocket) this.webSocketInstance = this.webSocketInstance.enable()
     }
 
-    async _sendCallback(type: keyof typeof callBackFilters, body: any, key: string) {
+    async _sendCallback(type: CallBackType, body: any, key: string) {
         logger.debug(body, `callback: ${type}`)
-        const cb = type.split(':')[0]
-
-        if (
-            callBackFilters[type].some((e) => config.websocketAllowedEvents.includes(e))
-        ) {
-            this.webSocketInstance?.sendCallback(cb, body, key)  
-        }
-
-        if (
-            callBackFilters[type].some((e) => config.webhookAllowedEvents.includes(e))
-        ) {
-            this.webHookInstance?.sendCallback(cb, body, key)       
-        }
+        this.webSocketInstance?.sendCallback(type, body, key)
+        this.webHookInstance?.sendCallback(type, body, key)
     }
 
     async init() {

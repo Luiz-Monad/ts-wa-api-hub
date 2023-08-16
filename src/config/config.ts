@@ -63,7 +63,7 @@ const WEBHOOK_URL = process.env.WEBHOOK_URL
 // Receive message content in webhook (Base64 format)
 const WEBHOOK_BASE64 = !!(process.env.WEBHOOK_BASE64 && process.env.WEBHOOK_BASE64 === 'true')
 // allowed events which should be sent to webhook
-const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') || ['all']
+const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS
 
 // ==================================
 // WEBSOCKET CONFIGURATION
@@ -71,7 +71,7 @@ const WEBHOOK_ALLOWED_EVENTS = process.env.WEBHOOK_ALLOWED_EVENTS?.split(',') ||
 // Enable or disable websockets globally on project
 const WEBSOCKET_ENABLED = !!(process.env.WEBSOCKET_ENABLED && process.env.WEBSOCKET_ENABLED === 'true')
 // allowed events which should be sent to websocket
-const WEBSOCKET_ALLOWED_EVENTS = process.env.WEBSOCKET_ALLOWED_EVENTS?.split(',') || ['all']
+const WEBSOCKET_ALLOWED_EVENTS = process.env.WEBSOCKET_ALLOWED_EVENTS
 
 // ==================================
 // MESSAGE CONFIGURATION

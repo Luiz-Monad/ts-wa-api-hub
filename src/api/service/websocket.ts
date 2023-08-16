@@ -2,22 +2,20 @@ import { AppType, ServerType } from '../helper/types'
 import { Server } from 'socket.io'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
+import { Callback } from '../class/callback'
 
 const logger = getLogger('websocket')
 
-
-export class WebSocket {
+export class WebSocket extends Callback {
     appServer: ServerType
-    allowCallback: boolean = false
     io: Server | null = null
 
-    constructor(appServer: ServerType, allowCallback: boolean) {
+    constructor(appServer: ServerType, enabled: boolean, filters: string | null) {
+        super(enabled, filters)
         this.appServer = appServer
-        this.allowCallback = allowCallback
     }
 
-    async sendCallback(type: string, body: any, key: string) {
-        if (!this.allowCallback) return
+    async coreSendCallback(type: string, body: any, key: string) {
         if (!this.io) {
             this.io = new Server(this.appServer)
         }
@@ -28,14 +26,15 @@ export class WebSocket {
     }
 
     enable() {
-        return new WebSocket(this.appServer, true)
+        return new WebSocket(this.appServer, true, this.filters)
     }
 }
 
 export async function initWebSocketService(app: AppType, server: ServerType) {
-    const allow = config.websocketEnabled
-    app.set('WebSocketService', new WebSocket(server, allow))
-    if (allow) logger.info('Using WebSocket service')
+    const enabled = config.websocketEnabled
+    const filters = config.webhookAllowedEvents ?? null
+    app.set('WebSocketService', new WebSocket(server, enabled, filters))
+    if (enabled) logger.info('Using WebSocket service')
 }
 
 export default function getWebSocketService(app: AppType): WebSocket {

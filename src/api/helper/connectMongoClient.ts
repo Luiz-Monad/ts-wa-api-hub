@@ -88,8 +88,8 @@ class MongoDatabase extends Database {
             .map((c) => this.table(c.name))
     }
 
-    table(name: string): Table<any> {
-        return new MongoTable(this.db, name)
+    table<T>(name: string): Table<T> {
+        return new MongoTable<T & Document>(this.db, name)
     }
 }
 

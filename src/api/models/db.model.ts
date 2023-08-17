@@ -1,4 +1,3 @@
-import Chat from './chat.model'
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -58,13 +57,11 @@ export class Table<T> {
 }
 
 export default class Database {
-    Chat: Table<Chat> = <any>{}
-
     listTable(): Promise<Table<any>[]> {
         throw new Error('Method not implemented.')
     }
 
-    table(name: string): Table<any> {
+    table<T>(name: string): Table<T> {
         throw new Error('Method not implemented.')
     }
 }

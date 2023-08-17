@@ -44,7 +44,7 @@ class FsTable<T> extends Table<T> {
         return await lockfile.lock(this.filePath, { realpath: false, retries: 16 })
     }
 
-    getKey = (obj: Keyed<T>) => 
+    getKey = (obj: Keyed<T>) =>
         ('key' in obj ? obj.key : '_id' in obj ? obj._id : '')
 
     keyPredicate = (find: Keyed<T>) => (obj: Keyed<T>) =>
@@ -89,7 +89,7 @@ class FsTable<T> extends Table<T> {
             release()
         }
     }
-  
+
     async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
         logger.debug({indexer, record, options}, 'update one')
         const release = await this.lock()
@@ -185,7 +185,7 @@ class FsTable<T> extends Table<T> {
             logger.warn(err, 'find and delete one')
         } finally {
             release()
-        }        
+        }
     }
 }
 
@@ -207,8 +207,8 @@ class FsDatabase extends Database {
             .map((name) => this.table(path.basename(name, '.json')))
     }
 
-    table(name: string): Table<any> {
-        return new FsTable(this.directory, name)
+    table<T>(name: string): Table<T> {
+        return new FsTable<T>(this.directory, name)
     }
 }
 

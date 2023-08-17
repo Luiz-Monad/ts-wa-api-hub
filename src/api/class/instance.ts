@@ -1,22 +1,22 @@
-import QRCode from 'qrcode'
-import { Boom } from '@hapi/boom'
-import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, makeCacheableSignalKeyStore, default as makeWASocket } from '@whiskeysockets/baileys'
-import { v4 as uuidv4 } from 'uuid'
-import processButton, { ButtonDef } from '../helper/processbtn'
-import generateVC, { VCardData } from '../helper/genVc'
-import { ChatType } from '../models/chat.model'
 import config from '../../config/config'
-import downloadMessage from '../helper/downloadMsg'
+import getLogger, { getWaCacheLogger, getWaLogger } from '../../config/logging'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
+import useChatState, { ChatState } from '../helper/chatState'
+import downloadMessage from '../helper/downloadMsg'
+import generateVC, { VCardData } from '../helper/genVc'
+import useGroupState, { GroupState } from '../helper/groupState'
+import useMessageState, { MessageState } from '../helper/messageState'
+import processButton, { ButtonDef } from '../helper/processbtn'
+import processMessage, { MediaType } from '../helper/processmessage'
 import { AppType, FileType } from '../helper/types'
-import getDatabaseService from '../service/database'
 import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
-import processMessage, { MediaType } from '../helper/processmessage'
-import Database from '../models/db.model'
-import getLogger, { getWaCacheLogger, getWaLogger } from '../../config/logging'
 import { CallBackType } from './callback'
+import { Boom } from '@hapi/boom'
+import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, makeCacheableSignalKeyStore, default as makeWASocket } from '@whiskeysockets/baileys'
 import axios from 'axios'
+import QRCode from 'qrcode'
+import { v4 as uuidv4 } from 'uuid'
 
 const logger = getLogger('instance')
 
@@ -73,17 +73,17 @@ class WhatsAppInstance {
     }
     key: string
     authState: AuthState | null = null
-    db: Database = <Database>{}
+    chatState: ChatState | null = null
+    groupState: GroupState | null = null
+    messageState: MessageState | null = null
     webHookInstance: WebHook | null = null
     webSocketInstance: WebSocket | null = null
 
     instance = {
-        chats: <ChatType[]>{},
         qr: '',
         qr_url: '',
         qrRetry: 0,
         initRetry: 0,
-        messages: <WAMessage[]>[],
         sock: <WASocket | null>null,
         online: false,
     }
@@ -105,7 +105,6 @@ class WhatsAppInstance {
 
     async init() {
         try {
-            this.db = getDatabaseService(this.app)
             this.authState = await useAuthState(this.app, this.key)
             const state = this.authState.readState()
             const socketConfig = {
@@ -136,6 +135,13 @@ class WhatsAppInstance {
         } catch (e) {
             logger.error(e, 'Error dropping auth state')
         }
+    }
+
+    async _onConnect() {
+        if (!config.database.enabled) return
+        this.chatState = await useChatState(this.app, this.key)
+        this.groupState = await useGroupState(this.app, this.key)
+        this.messageState = await useMessageState(this.app, this.key)
     }
 
     setHandler() {
@@ -169,229 +175,253 @@ class WhatsAppInstance {
         // on credentials update save state
         sock?.ev.on('creds.update', async (creds) => {
             logger.debug(creds, 'creds.update')
-            if (this.authState) {
-                this.authState.saveCreds()
+            try {
+                if (this.authState) {
+                    this.authState.saveCreds()
+                }
+            } catch (e) {
+                logger.error(e, 'creds.update')
             }
         })
 
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             logger.debug(update, 'connection.update')
-            const { connection, lastDisconnect, qr } = update
-            logger.info(`STATE: ${connection}`)
+            try {
+                const { connection, lastDisconnect, qr } = update
+                logger.info(`STATE: ${connection}`)
 
-            if (connection === 'connecting') return
+                if (connection === 'connecting') return
 
-            if (connection === 'close') {
-                // reconnect if not logged out
-                if (
-                    (lastDisconnect?.error as Boom)?.output?.statusCode !==
-                    DisconnectReason.loggedOut
-                ) {
-                    this.instance.initRetry++
-                    if (this.instance.initRetry < Number(config.instance.maxRetryInit)) {
-                        await this.init()
+                if (connection === 'close') {
+                    // reconnect if not logged out
+                    if (
+                        (lastDisconnect?.error as Boom)?.output?.statusCode !==
+                        DisconnectReason.loggedOut
+                    ) {
+                        this.instance.initRetry++
+                        if (this.instance.initRetry < Number(config.instance.maxRetryInit)) {
+                            await this.init()
+                        } else {
+                            await this._drop()
+                            logger.info('STATE: Init failure')
+                            this.instance.online = false
+                        }
                     } else {
                         await this._drop()
-                        logger.info('STATE: Init failure')
+                        logger.info('STATE: Logged off')
                         this.instance.online = false
                     }
-                } else {
-                    await this._drop()
-                    logger.info('STATE: Logged off')
-                    this.instance.online = false
+                    await this._sendCallback(
+                        'connection:close',
+                        {
+                            connection: connection,
+                        },
+                        this.key
+                    )
+                } else if (connection === 'open') {
+                    await this._onConnect()
+                    this.instance.online = true
+                    await this._sendCallback(
+                        'connection:open',
+                        {
+                            connection: connection,
+                        },
+                        this.key
+                    )
                 }
-                await this._sendCallback(
-                    'connection:close',
-                    {
-                        connection: connection,
-                    },
-                    this.key
-                )
-            } else if (connection === 'open') {
-                if (config.database.enabled) {
-                    const alreadyThere = await this.db.Chat.findOne({ key: this.key })
-                    if (!alreadyThere) {
-                        const saveChat = this.db.Chat.record({ key: this.key })
-                        await saveChat.save()
-                    }
-                }
-                this.instance.online = true
-                await this._sendCallback(
-                    'connection:open',
-                    {
-                        connection: connection,
-                    },
-                    this.key
-                )
-            }
 
-            if (qr) {
-                logger.info(`qr: ${qr}`)
-                QRCode.toDataURL(qr).then((base64image) => {
-                    this.instance.qr = base64image
-                    this.instance.qr_url = qr
-                    this.instance.qrRetry++
-                    if (this.instance.qrRetry >= Number(config.instance.maxRetryQr)) {
-                        // close WebSocket connection
-                        this.instance.sock?.ws.close()
-                        // remove all events
-                        baileysEvents.forEach((ev) =>
-                            this.instance.sock?.ev.removeAllListeners(<any>ev)
-                        )
-                        // terminated
-                        this.instance.qr = ' '
-                        logger.info('socket connection terminated')
-                    }
-                })
+                if (qr) {
+                    logger.info(`qr: ${qr}`)
+                    QRCode.toDataURL(qr).then((base64image) => {
+                        this.instance.qr = base64image
+                        this.instance.qr_url = qr
+                        this.instance.qrRetry++
+                        if (this.instance.qrRetry >= Number(config.instance.maxRetryQr)) {
+                            // close WebSocket connection
+                            this.instance.sock?.ws.close()
+                            // remove all events
+                            baileysEvents.forEach((ev) =>
+                                this.instance.sock?.ev.removeAllListeners(<any>ev)
+                            )
+                            // terminated
+                            this.instance.qr = ' '
+                            logger.info('socket connection terminated')
+                        }
+                    })
+                }
+            } catch (e) {
+                logger.error(e, 'connection.update')
             }
         })
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
             logger.debug(json, 'presence.update')
-            await this._sendCallback('presence', json, this.key)
+            try {
+                await this._sendCallback('presence', json, this.key)
+            } catch (e) {
+                logger.error(e, 'presence.update')
+            }
         })
 
-        // on receive all chats
+        // on receive all chats/messages
         sock?.ev.on('messaging-history.set', async (ev) => {
             logger.debug(ev, 'messaging-history.set')
-            const { chats } = ev
-            this.instance.chats = []
-            const receivedChats = chats.map((chat) => {
-                return {
-                    ...chat,
-                    messages: [],
-                    name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant),
+            try {
+                if (this.chatState) {
+                    await this.chatState.setChats(ev)
                 }
-            })
-            this.instance.chats.push(...receivedChats)
-            await this._updateDb(this.instance.chats)
-            await this._updateDbGroupsParticipants()
+                if (this.messageState) {
+                    await this.messageState.setMessages(ev)
+                }
+                if (this.groupState) {
+                    const allGroupParticipants = await this.groupFetchAllParticipating()
+                    if (allGroupParticipants) {
+                        await this.groupState.setGroupChats(allGroupParticipants)
+                    }
+                }
+            } catch (e) {
+                logger.error(e, 'messaging-history.set')
+            }
         })
 
         // on receive new chat
-        sock?.ev.on('chats.upsert', (newChat) => {
+        sock?.ev.on('chats.upsert', async (newChat) => {
             logger.debug(newChat, 'chats.upsert')
-            const chats = newChat.map((chat) => {
-                return {
-                    ...chat,
-                    messages: [],
-                    name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant),
+            try {
+                if (this.chatState) {
+                    await this.chatState.upsertChats(newChat)
                 }
-            })
-            this.instance.chats.push(...chats)
+            } catch (e) {
+                logger.error(e, 'chats.upsert')
+            }
         })
 
         // on chat change
-        sock?.ev.on('chats.update', (changedChat) => {
+        sock?.ev.on('chats.update', async (changedChat) => {
             logger.debug(changedChat, 'chats.update')
-            changedChat.map((chat) => {
-                const index = this.instance.chats.findIndex((pc) => pc.id === chat.id)
-                const PrevChat = this.instance.chats[index]
-                this.instance.chats[index] = {
-                    ...PrevChat,
-                    ...chat,
-                    messages: chat.messages ?? [],
-                    name: chat.name ?? '',
-                    participant: this._toProtoParticipants(chat.participant),
+            try {
+                if (this.chatState) {
+                    await this.chatState.updateChats(changedChat)
                 }
-            })
+            } catch (e) {
+                logger.error(e, 'chats.update')
+            }
         })
 
         // on chat delete
-        sock?.ev.on('chats.delete', (deletedChats) => {
+        sock?.ev.on('chats.delete', async (deletedChats) => {
             logger.debug(deletedChats, 'chats.delete')
-            deletedChats.map((chat) => {
-                const index = this.instance.chats.findIndex((c) => c.id === chat)
-                this.instance.chats.splice(index, 1)
-            })
+            try {
+                if (this.chatState) {
+                    await this.chatState.deleteChats(deletedChats)
+                }
+            } catch (e) {
+                logger.error(e, 'chats.delete')
+            }
         })
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
             logger.debug(m, 'messages.upsert')
-            if (m.type === 'append') this.instance.messages.push(...m.messages)
+            try {
+                if (this.messageState) {
+                    await this.messageState.upsertMessages(m)
+                }
 
-            if (m.type !== 'notify') return
+                if (m.type !== 'notify') return
 
-            // https://adiwajshing.github.io/Baileys/#reading-messages
-            if (config.instance.markMessagesRead) {
-                const unreadMessages = m.messages.map((msg) => {
-                    return {
-                        remoteJid: msg.key.remoteJid,
-                        id: msg.key.id,
-                        participant: msg.key?.participant,
+                // https://adiwajshing.github.io/Baileys/#reading-messages
+                if (config.instance.markMessagesRead) {
+                    const unreadMessages = m.messages.map((msg) => {
+                        return {
+                            remoteJid: msg.key.remoteJid,
+                            id: msg.key.id,
+                            participant: msg.key?.participant,
+                        }
+                    })
+                    await sock.readMessages(unreadMessages)
+                }
+
+                m.messages.map(async (msg) => {
+                    if (!msg.message) return
+
+                    const messageType = Object.keys(msg.message)[0]
+                    if (
+                        [
+                            'protocolMessage',
+                            'senderKeyDistributionMessage',
+                        ].includes(messageType)
+                    )
+                        return
+
+                    const data = {
+                        ...{ key: this.key },
+                        ...msg,
+                        messageKey: msg.key,
+                        instanceKey: this.key,
+                        text: <typeof m | null>null,
+                        msgContent: <string | null | void>null,
                     }
+
+                    if (messageType === 'conversation') {
+                        data.text = m
+                    }
+                    if (config.webhookBase64) {
+                        switch (messageType) {
+                            case 'imageMessage':
+                                data.msgContent = await downloadMessage(
+                                    msg.message.imageMessage!,
+                                    'image'
+                                )
+                                break
+                            case 'videoMessage':
+                                data.msgContent = await downloadMessage(
+                                    msg.message.videoMessage!,
+                                    'video'
+                                )
+                                break
+                            case 'audioMessage':
+                                data.msgContent = await downloadMessage(
+                                    msg.message.audioMessage!,
+                                    'audio'
+                                )
+                                break
+                            default:
+                                data.msgContent = ''
+                                break
+                        }
+                    }
+                    await this._sendCallback('message', data, this.key)
                 })
-                await sock.readMessages(unreadMessages)
+            } catch (e) {
+                logger.error(e, 'messages.upsert')
             }
-
-            this.instance.messages.push(...m.messages)
-
-            m.messages.map(async (msg) => {
-                if (!msg.message) return
-
-                const messageType = Object.keys(msg.message)[0]
-                if (
-                    [
-                        'protocolMessage',
-                        'senderKeyDistributionMessage',
-                    ].includes(messageType)
-                )
-                    return
-
-                const data = {
-                    ...{ key: this.key },
-                    ...msg,
-                    messageKey: msg.key,
-                    instanceKey: this.key,
-                    text: <typeof m | null>null,
-                    msgContent: <string | null | void>null,
-                }
-
-                if (messageType === 'conversation') {
-                    data.text = m
-                }
-                if (config.webhookBase64) {
-                    switch (messageType) {
-                        case 'imageMessage':
-                            data.msgContent = await downloadMessage(
-                                msg.message.imageMessage!,
-                                'image'
-                            )
-                            break
-                        case 'videoMessage':
-                            data.msgContent = await downloadMessage(
-                                msg.message.videoMessage!,
-                                'video'
-                            )
-                            break
-                        case 'audioMessage':
-                            data.msgContent = await downloadMessage(
-                                msg.message.audioMessage!,
-                                'audio'
-                            )
-                            break
-                        default:
-                            data.msgContent = ''
-                            break
-                    }
-                }
-                await this._sendCallback('message', data, this.key)
-            })
         })
 
         // on mssage change
         sock?.ev.on('messages.update', async (messages) => {
             logger.debug(messages, 'messages.update')
+            try {
+                if (this.messageState) {
+                    await this.messageState.updateMessages(messages)
+                }
+            } catch (e) {
+                logger.error(e, 'messages.update')
+            }
         })
 
         // on mssage delete
         sock?.ev.on('messages.delete', async (messages) => {
             logger.debug(messages, 'messages.delete')
+            try {
+                if (this.messageState) {
+                    await this.messageState.deleteMessages(messages)
+                }
+            } catch (e) {
+                logger.error(e, 'messages.delete')
+            }
         })
 
         sock?.ws.on('CB:call', async (data) => {
@@ -434,31 +464,45 @@ class WhatsAppInstance {
 
         sock?.ev.on('groups.upsert', async (newChat) => {
             logger.debug(newChat, 'groups.upsert')
-            this._createGroupByApp(newChat)
-            await this._sendCallback(
-                'group_created',
-                {
-                    data: newChat,
-                },
-                this.key
-            )
+            try {
+                if (this.groupState) {
+                    await this.groupState.upsertGroupChats(newChat)
+                }
+                await this._sendCallback(
+                    'group_created',
+                    {
+                        data: newChat,
+                    },
+                    this.key
+                )
+            } catch (e) {
+                logger.error(e, 'groups.upsert')
+            }
         })
 
         sock?.ev.on('groups.update', async (newChat) => {
             logger.debug(newChat, 'groups.update')
-            this._updateGroupSubjectByApp(newChat)
-            await this._sendCallback(
-                'group_updated',
-                {
-                    data: newChat,
-                },
-                this.key
-            )
+            try {
+                if (this.groupState) {
+                    await this.groupState.updateGroupChats(newChat)
+                }
+                await this._sendCallback(
+                    'group_updated',
+                    {
+                        data: newChat,
+                    },
+                    this.key
+                )
+            } catch (e) {
+                logger.error(e, 'groups.update')
+            }
         })
 
         sock?.ev.on('group-participants.update', async (newChat) => {
             logger.debug(newChat, 'group-participants.update')
-            this._updateGroupParticipantsByApp(newChat)
+            if (this.groupState) {
+                await this.groupState.updateGroupParticipants(newChat)
+            }
             await this._sendCallback(
                 'group_participants_updated',
                 {
@@ -469,14 +513,17 @@ class WhatsAppInstance {
         })
     }
 
-    _toProtoParticipants(parts: proto.IGroupParticipant[] | null | undefined) {
-        const rank = [null, 'admin', 'superadmin']
-        return ((parts && parts.map((p) => ({ id: p.userJid, admin: rank[p.rank ?? 0] }))) || undefined)
-    }
-
     async deleteInstance(key: string) {
         try {
-            await this.db.Chat.findOneAndDelete({ key: key })
+            if (this.chatState) {
+                await this.chatState.archiveChats()
+            }
+            if (this.groupState) {
+                await this.groupState.archiveGroupChats()
+            }
+            if (this.messageState) {
+                await this.messageState.archiveMessages()
+            }
         } catch (e) {
             const msg = 'Error when deleting instance'
             logger.error(e, msg)
@@ -735,8 +782,8 @@ class WhatsAppInstance {
     // get user or group object from db by id
     async getUserOrGroupById(id: string) {
         try {
-            const chats = await this._getChats()
-            const group = chats?.find((c) => c.id === this._getWhatsAppId(id))
+            if (!this.groupState) return
+            const group = await this.groupState.findGroupChat(id)
             if (!group) throw new Error('unable to get group, check if the group exists')
             return group
         } catch (e) {
@@ -749,41 +796,6 @@ class WhatsAppInstance {
     // Group Methods
     _parseParticipants(users: string[]) {
         return users.map((users) => this._getWhatsAppId(users))
-    }
-
-    _toParticipants(participants: GroupParticipant[]) {
-        return participants.map((p) => ({ id: p.id, admin: p.admin ?? null }))
-    }
-
-    async _updateDbGroupsParticipants() {
-        try {
-            const groups = await this.groupFetchAllParticipating()
-            const chats = await this._getChats()
-            if (groups && chats) {
-                for (const [key, value] of Object.entries(groups)) {
-                    const group = chats.find((c) => c.id === value.id)
-                    if (group) {
-                        const participants: GroupParticipant[] = []
-                        for (const [key_participant, participant] of Object.entries(
-                            value.participants
-                        )) {
-                            participants.push(participant)
-                        }
-                        group.participant = this._toParticipants(participants)
-                        if (value.creation) {
-                            group.creation = value.creation
-                        }
-                        if (value.subjectOwner) {
-                            group.subjectOwner = value.subjectOwner
-                        }
-                        chats.filter((c) => c.id === value.id)[0] = group
-                    }
-                }
-                await this._updateDb(chats)
-            }
-        } catch (e) {
-            logger.error(e, 'Error updating groups failed')
-        }
     }
 
     async createNewGroup(name: string, users: string[]) {
@@ -847,21 +859,12 @@ class WhatsAppInstance {
 
     async getAllGroups() {
         try {
-            const chats = await this._getChats()
-            return chats
-                ?.filter((c) => c.id.includes('@g.us'))
-                .map((data, i) => {
-                    return {
-                        index: i,
-                        name: data.name,
-                        jid: data.id,
-                        participant: data.participant,
-                        creation: data.creation,
-                        subjectOwner: data.subjectOwner,
-                    }
-                })
+            if (!this.groupState) {
+                return null
+            }
+            return await this.groupState.findGroupChats()
         } catch (e) {
-            const msg = 'Unable to list all chats'            
+            const msg = 'Unable to list all chats'
             logger.error(e, msg)
             throw new Error(msg)
         }
@@ -869,8 +872,8 @@ class WhatsAppInstance {
 
     async leaveGroup(id: string) {
         try {
-            const chats = await this._getChats()
-            const group = chats?.find((c) => c.id === id)
+            if (!this.groupState) throw new Error('not initialized')
+            const group = await this.groupState.findGroupChat(id)
             if (!group) throw new Error('no group exists')
             return await this.instance.sock?.groupLeave(id)
         } catch (e) {
@@ -882,8 +885,8 @@ class WhatsAppInstance {
 
     async getInviteCodeGroup(id: string) {
         try {
-            const chats = await this._getChats()
-            const group = chats?.find((c) => c.id === id)
+            if (!this.groupState) throw new Error('not initialized')
+            const group = await this.groupState.findGroupChat(id)
             if (!group)
                 throw new Error('unable to get invite code, check if the group exists')
             return await this.instance.sock?.groupInviteCode(id)
@@ -901,105 +904,6 @@ class WhatsAppInstance {
             const msg = 'Error get instance invite code group failed'
             logger.error(e, msg)
             throw new Error(msg)
-        }
-    }
-
-    // get Chat object from db
-    async _getChats(key = this.key) {
-        const dbResult = await this.db.Chat.findOne({ key: key })
-        return dbResult?.chat
-    }
-
-    // create new group by application
-    async _createGroupByApp(newChat: GroupMetadata[]) {
-        try {
-            const chats = await this._getChats()
-            const group = {
-                id: newChat[0].id,
-                name: newChat[0].subject,
-                participant: this._toParticipants(newChat[0].participants),
-                messages: [],
-                creation: newChat[0].creation,
-                subjectOwner: newChat[0].subjectOwner,
-            }
-            chats?.push(group)
-            await this._updateDb(chats)
-        } catch (e) {
-            logger.error(e, 'Error updating document failed')
-        }
-    }
-
-    async _updateGroupSubjectByApp(newChat: Partial<GroupMetadata>[]) {
-        try {
-            if (newChat[0] && newChat[0].subject) {
-                const chats = await this._getChats()
-                const chat = chats?.find((c) => c.id === newChat[0].id)
-                chat!.name = newChat[0].subject
-                await this._updateDb(chats)
-            }
-        } catch (e) {
-            logger.error(e, 'Error updating group subjects')
-        }
-    }
-
-    async _updateGroupParticipantsByApp(newChat: { id: string; participants: string[]; action: ParticipantAction }) {
-        try {
-            if (newChat && newChat.id) {
-                let chats = await this._getChats()
-                const chat = chats?.find((c) => c.id === newChat.id)
-                let is_owner = false
-                if (chat) {
-                    if (chat.participant === undefined) {
-                        chat.participant = []
-                    }
-                    if (chat.participant && newChat.action === 'add') {
-                        for (const participant of newChat.participants) {
-                            chat.participant.push({
-                                id: participant,
-                                admin: null,
-                            })
-                        }
-                    }
-                    if (chat.participant && newChat.action === 'remove') {
-                        for (const participant of newChat.participants) {
-                            // remove group if they are owner
-                            if (chat.subjectOwner === participant) {
-                                is_owner = true
-                            }
-                            chat.participant = chat.participant.filter(
-                                (p) => p.id != participant
-                            )
-                        }
-                    }
-                    if (chat.participant && newChat.action === 'demote') {
-                        for (const participant of newChat.participants) {
-                            if (chat.participant.filter((p) => p.id === participant)[0]) {
-                                chat.participant.filter(
-                                    (p) => p.id === participant
-                                )[0].admin = null
-                            }
-                        }
-                    }
-                    if (chat.participant && newChat.action === 'promote') {
-                        for (const participant of newChat.participants) {
-                            if (chat.participant.filter((p) => p.id === participant)[0]) {
-                                chat.participant.filter(
-                                    (p) => p.id === participant
-                                )[0].admin = 'superadmin'
-                            }
-                        }
-                    }
-                    if (is_owner) {
-                        chats = chats?.filter((c) => c.id !== newChat.id)
-                    } else {
-                        chats = chats?.filter((c) => c.id === newChat.id)
-                        chats![0] = chat
-                    }
-                    await this._updateDb(chats)
-                }
-            }
-        } catch (e) {
-            logger.error(e, 'Error updating group participants')
         }
     }
 
@@ -1071,15 +975,6 @@ class WhatsAppInstance {
             const msg = 'Unable to update description check if you are admin in group'
             logger.error(e, msg)
             throw new Error(msg)
-        }
-    }
-
-    // update db document -> chat
-    async _updateDb(object?: ChatType[]) {
-        try {
-            await this.db.Chat.updateOne({ key: this.key }, { chat: object })
-        } catch (e) {
-            logger.error('Error updating document failed')
         }
     }
 

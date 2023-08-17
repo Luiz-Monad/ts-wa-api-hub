@@ -1,7 +1,7 @@
 import { proto } from '@whiskeysockets/baileys/WAProto'
 import { AuthenticationCreds } from '@whiskeysockets/baileys'
 import { Curve, signedKeyPair } from '@whiskeysockets/baileys/lib/Utils/crypto'
-import { generateRegistrationId } from '@whiskeysockets/baileys/lib/Utils/generics'
+import { BufferJSON, generateRegistrationId } from '@whiskeysockets/baileys/lib/Utils/generics'
 import { randomBytes } from 'crypto'
 import { AppType, TypeOfPromise } from './types'
 import getDatabaseService from '../service/database'
@@ -26,41 +26,9 @@ const initAuthCreds = () => {
     }
 }
 
-const BufferJSON = {
-    replacer: (k: any, value: { type: string; data: any }) => {
-        if (
-            Buffer.isBuffer(value) ||
-            value instanceof Uint8Array ||
-            value?.type === 'Buffer'
-        ) {
-            return {
-                type: 'Buffer',
-                data: Buffer.from(value?.data || value).toString('base64'),
-            }
-        }
-
-        return value
-    },
-
-    reviver: (_: any, value: { buffer: boolean; type: string; data: any; value: any }) => {
-        if (
-            typeof value === 'object' &&
-            !!value &&
-            (value.buffer === true || value.type === 'Buffer')
-        ) {
-            const val = value.data || value.value
-            return typeof val === 'string'
-                ? Buffer.from(val, 'base64')
-                : Buffer.from(val || [])
-        }
-
-        return value
-    },
-}
-
 export default async function useAuthState(app: AppType, key: string) {
     const db = getDatabaseService(app)
-    const table = db.table(key)
+    const table = db.table(`${key}-auth`)
     const writeData = async (data: any, id: string) => {
         try {
             return await table.replaceOne(

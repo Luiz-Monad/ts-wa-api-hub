@@ -63,7 +63,7 @@ function getStream() {
 
 export function getHttpLogger() {
     return pinoHttp({
-        name: 'http',    
+        name: 'http',
         level: config.log.httpLevel
     }, getStream())
 }

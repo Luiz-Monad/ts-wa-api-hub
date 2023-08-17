@@ -5,7 +5,7 @@ const callBackFilters = {
         'connection',
         'connection.update',
         'connection:close',
-    ],    
+    ],
     'connection:open': [
         'all',
         'connection',
@@ -13,34 +13,34 @@ const callBackFilters = {
         'connection:open',
     ],
     'presence': [
-        'all', 
-        'presence', 
+        'all',
+        'presence',
         'presence.update',
     ],
     'message': [
-        'all', 
-        'messages', 
+        'all',
+        'messages',
         'messages.upsert',
     ],
     'call_offer': [
-        'all', 
-        'call', 
-        'CB:call', 
+        'all',
+        'call',
+        'CB:call',
         'call:offer',
     ],
     'call_terminate': [
         'all',
-        'call', 
+        'call',
         'call:terminate',
     ],
     'group_created': [
-        'all', 
-        'groups', 
+        'all',
+        'groups',
         'groups.upsert',
     ],
     'group_updated': [
-        'all', 
-        'groups', 
+        'all',
+        'groups',
         'groups.update',
     ],
     'group_participants_updated': [
@@ -65,12 +65,12 @@ export class Callback {
     }
 
     async sendCallback(type: CallBackType, body: any, key: string) {
-        if (!this.enabled) return  
+        if (!this.enabled) return
         if (
             callBackFilters[type].some((e) => this.filterList.includes(e))
         ) {
-            const cb = type.split(':')[0]      
-            this.coreSendCallback(cb, body, key)  
+            const cb = type.split(':')[0]
+            this.coreSendCallback(cb, body, key)
         }
     }
 

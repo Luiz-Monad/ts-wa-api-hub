@@ -1,7 +1,10 @@
 import { proto } from '@whiskeysockets/baileys/WAProto'
 import { AuthenticationCreds } from '@whiskeysockets/baileys'
 import { Curve, signedKeyPair } from '@whiskeysockets/baileys/lib/Utils/crypto'
-import { BufferJSON, generateRegistrationId } from '@whiskeysockets/baileys/lib/Utils/generics'
+import {
+    BufferJSON,
+    generateRegistrationId,
+} from '@whiskeysockets/baileys/lib/Utils/generics'
 import { randomBytes } from 'crypto'
 import { AppType, TypeOfPromise } from './types'
 import getDatabaseService from '../service/database'

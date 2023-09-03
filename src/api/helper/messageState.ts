@@ -11,7 +11,11 @@ const logger = getLogger('message')
 export default async function useMessageState(app: AppType, key: string) {
     const db = getDatabaseService(app)
     const messageTable = db.table<MessageInfoType>(`${key}-message`)
-    const fixKey = (key: Partial<proto.IMessageKey>, altKey: Partial<proto.IMessageKey>, _id: string) => ({
+    const fixKey = (
+        key: Partial<proto.IMessageKey>,
+        altKey: Partial<proto.IMessageKey>,
+        _id: string
+    ) => ({
         ...altKey,
         ...key,
         id: _id,
@@ -19,14 +23,20 @@ export default async function useMessageState(app: AppType, key: string) {
     const fixMessage = (message: Partial<proto.IMessage>, _id: string) => ({
         ...message,
     })
-    const fixMessageInfoId = (message: Partial<proto.IWebMessageInfo>, key: Partial<proto.IMessageKey>, _id: string) => ({
+    const fixMessageInfoId = (
+        message: Partial<proto.IWebMessageInfo>,
+        key: Partial<proto.IMessageKey>,
+        _id: string
+    ) => ({
         ...message,
         _id: _id,
         key: fixKey(key, message.key ?? {}, _id),
         message: fixMessage(message.message ?? {}, _id),
     })
-    const fixMessageInfo = (info: Partial<proto.IWebMessageInfo>, key: Partial<proto.IMessageKey>) =>
-        fixMessageInfoId(info, key, key.id ?? info.key?.id ?? uuidv4())
+    const fixMessageInfo = (
+        info: Partial<proto.IWebMessageInfo>,
+        key: Partial<proto.IMessageKey>
+    ) => fixMessageInfoId(info, key, key.id ?? info.key?.id ?? uuidv4())
     return {
         setMessages: async (event: BaileysEventMap['messaging-history.set']) => {
             const tasks = []
@@ -57,7 +67,7 @@ export default async function useMessageState(app: AppType, key: string) {
             const tasks = []
             if ('keys' in ids) {
                 for (const key of ids.keys) {
-                    if (!key.id ) continue
+                    if (!key.id) continue
                     const data = { _deleted: true }
                     tasks.push(messageTable.updateOne({ _id: key.id }, data))
                 }

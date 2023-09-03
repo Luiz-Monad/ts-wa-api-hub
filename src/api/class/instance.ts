@@ -13,7 +13,11 @@ import getWebHookService, { WebHook } from '../service/webhook'
 import getWebSocketService, { WebSocket } from '../service/websocket'
 import { CallBackType } from './callback'
 import { Boom } from '@hapi/boom'
-import { DisconnectReason, GroupMetadata, GroupParticipant, WAMessage, proto, makeCacheableSignalKeyStore, default as makeWASocket } from '@whiskeysockets/baileys'
+import {
+    DisconnectReason,
+    makeCacheableSignalKeyStore,
+    default as makeWASocket,
+} from '@whiskeysockets/baileys'
 import axios from 'axios'
 import QRCode from 'qrcode'
 import { v4 as uuidv4 } from 'uuid'
@@ -89,7 +93,13 @@ class WhatsAppInstance {
 
     sock: WASocket | null = null
 
-    constructor(app: AppType, key?: string, allowWebhook?: boolean, webhook?: string | null, allowWebsocket?: boolean) {
+    constructor(
+        app: AppType,
+        key?: string,
+        allowWebhook?: boolean,
+        webhook?: string | null,
+        allowWebsocket?: boolean
+    ) {
         this.app = app
         this.key = key ? key : uuidv4()
         this.webHookInstance = getWebHookService(this.app)
@@ -201,7 +211,9 @@ class WhatsAppInstance {
                         DisconnectReason.loggedOut
                     ) {
                         this.instance.initRetry++
-                        if (this.instance.initRetry < Number(config.instance.maxRetryInit)) {
+                        if (
+                            this.instance.initRetry < Number(config.instance.maxRetryInit)
+                        ) {
                             await this.init()
                         } else {
                             await this._drop()
@@ -350,10 +362,9 @@ class WhatsAppInstance {
 
                     const messageType = Object.keys(msg.message)[0]
                     if (
-                        [
-                            'protocolMessage',
-                            'senderKeyDistributionMessage',
-                        ].includes(messageType)
+                        ['protocolMessage', 'senderKeyDistributionMessage'].includes(
+                            messageType
+                        )
                     )
                         return
 
@@ -429,7 +440,9 @@ class WhatsAppInstance {
             logger.debug(data, 'CB:call')
             if (data.content) {
                 if (data.content.find((e: { tag: string }) => e.tag === 'offer')) {
-                    const content = data.content.find((e: { tag: string }) => e.tag === 'offer')
+                    const content = data.content.find(
+                        (e: { tag: string }) => e.tag === 'offer'
+                    )
                     await this._sendCallback(
                         'call_offer',
                         {
@@ -443,7 +456,9 @@ class WhatsAppInstance {
                         },
                         this.key
                     )
-                } else if (data.content.find((e: { tag: string }) => e.tag === 'terminate')) {
+                } else if (
+                    data.content.find((e: { tag: string }) => e.tag === 'terminate')
+                ) {
                     const content = data.content.find(
                         (e: { tag: string }) => e.tag === 'terminate'
                     )
@@ -573,8 +588,7 @@ class WhatsAppInstance {
         try {
             await this._verifyId(this._getWhatsAppId(to))
 
-            const data = await this.sock?.sendMessage(
-                this._getWhatsAppId(to), {
+            const data = await this.sock?.sendMessage(this._getWhatsAppId(to), {
                 text: message,
             })
             return data
@@ -585,7 +599,13 @@ class WhatsAppInstance {
         }
     }
 
-    async sendMediaFile(to: string, file: FileType, type: MediaType, caption?: string, filename?: string) {
+    async sendMediaFile(
+        to: string,
+        file: FileType,
+        type: MediaType,
+        caption?: string,
+        filename?: string
+    ) {
         try {
             await this._verifyId(this._getWhatsAppId(to))
 
@@ -607,7 +627,13 @@ class WhatsAppInstance {
         }
     }
 
-    async sendUrlMediaFile(to: string, url: string, type: MediaType, mimeType: string, caption?: string) {
+    async sendUrlMediaFile(
+        to: string,
+        url: string,
+        type: MediaType,
+        mimeType: string,
+        caption?: string
+    ) {
         try {
             await this._verifyId(this._getWhatsAppId(to))
 
@@ -677,8 +703,7 @@ class WhatsAppInstance {
         try {
             await this._verifyId(this._getWhatsAppId(to))
 
-            const result = await this.sock?.sendMessage(
-                this._getWhatsAppId(to), {
+            const result = await this.sock?.sendMessage(this._getWhatsAppId(to), {
                 templateButtons: processButton(data.buttons),
                 text: data.text ?? '',
                 footer: data.footerText ?? '',
@@ -697,15 +722,12 @@ class WhatsAppInstance {
             await this._verifyId(this._getWhatsAppId(to))
 
             const vcard = generateVC(data)
-            const result = await this.sock?.sendMessage(
-                await this._getWhatsAppId(to),
-                {
-                    contacts: {
-                        displayName: data.fullName,
-                        contacts: [{ displayName: data.fullName, vcard }],
-                    },
-                }
-            )
+            const result = await this.sock?.sendMessage(await this._getWhatsAppId(to), {
+                contacts: {
+                    displayName: data.fullName,
+                    contacts: [{ displayName: data.fullName, vcard }],
+                },
+            })
             return result
         } catch (e) {
             const msg = 'Unable to send contact message'
@@ -837,7 +859,8 @@ class WhatsAppInstance {
             )
             return res
         } catch (e) {
-            const msg = 'Unable to promote some participants, check if you are admin in group or participants exists'
+            const msg =
+                'Unable to promote some participants, check if you are admin in group or participants exists'
             logger.error(e, msg)
             throw new Error(msg)
         }
@@ -852,7 +875,8 @@ class WhatsAppInstance {
             )
             return res
         } catch (e) {
-            const msg = 'Unable to demote some participants, check if you are admin in group or participants exists'
+            const msg =
+                'Unable to demote some participants, check if you are admin in group or participants exists'
             logger.error(e, msg)
             throw new Error(msg)
         }
@@ -920,7 +944,11 @@ class WhatsAppInstance {
     }
 
     // update promote demote remove
-    async groupParticipantsUpdate(id: string, users: string[], action: ParticipantAction) {
+    async groupParticipantsUpdate(
+        id: string,
+        users: string[],
+        action: ParticipantAction
+    ) {
         try {
             const res = await this.sock?.groupParticipantsUpdate(
                 this._getWhatsAppId(id),

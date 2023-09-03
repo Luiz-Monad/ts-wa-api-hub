@@ -45,7 +45,9 @@ export const getInviteCodeGroup: ReqHandler = async (req, res) => {
 }
 
 export const getInstanceInviteCodeGroup: ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).getInstanceInviteCodeGroup(<string>req.query.id)
+    const data = await getInstanceForReq(req).getInstanceInviteCodeGroup(
+        <string>req.query.id
+    )
     return res
         .status(201)
         .json({ error: false, link: 'https://chat.whatsapp.com/' + data })

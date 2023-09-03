@@ -35,33 +35,41 @@ class MongoTable<T extends Document> extends Table<T> {
         return Object.assign(mongoRecord, record)
     }
 
-    async replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
-        logger.debug({indexer, record, options}, 'replace one')
+    async replaceOne(
+        indexer: Keyed<T>,
+        record: T,
+        options?: { upsert: boolean }
+    ): Promise<void> {
+        logger.debug({ indexer, record, options }, 'replace one')
         await this.collection.replaceOne(indexer, record, options ?? {})
     }
 
-    async updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
-        logger.debug({indexer, record, options}, 'update one')
+    async updateOne(
+        indexer: Keyed<T>,
+        record: Partial<T>,
+        options?: { upsert: boolean }
+    ): Promise<void> {
+        logger.debug({ indexer, record, options }, 'update one')
         await this.collection.updateOne(indexer, record, options ?? {})
     }
 
     async deleteOne(indexer: Keyed<T>): Promise<void> {
-        logger.debug({indexer}, 'delete one')
+        logger.debug({ indexer }, 'delete one')
         await this.collection.deleteOne(indexer)
     }
 
     async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
-        logger.debug({indexer}, 'find and delete one')
+        logger.debug({ indexer }, 'find and delete one')
         return (await this.collection.findOneAndDelete(indexer)) as Value<T>
     }
 
     async findOne(indexer: Keyed<T>): Promise<T | null> {
-        logger.debug({indexer}, 'find one')
+        logger.debug({ indexer }, 'find one')
         return (await this.collection.findOne(indexer)) as T
     }
 
     async find(indexer: Keyed<T>): Promise<T[] | null> {
-        logger.debug({indexer}, 'find query')
+        logger.debug({ indexer }, 'find query')
         return (await this.collection.find(indexer).toArray()).map((r) => r as T)
     }
 
@@ -83,9 +91,7 @@ class MongoDatabase extends Database {
 
     async listTable(): Promise<Table<any>[]> {
         const collections = await this.db.listCollections().toArray()
-        return collections
-            .filter((c) => c.name !== 'Chat')
-            .map((c) => this.table(c.name))
+        return collections.filter((c) => c.name !== 'Chat').map((c) => this.table(c.name))
     }
 
     table<T>(name: string): Table<T> {

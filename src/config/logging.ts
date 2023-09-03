@@ -26,7 +26,7 @@ const loggerColors: Record<string, number> = {}
 const usedColors: Record<number, boolean> = {}
 
 function getRandomUnusedColor(): number {
-    const unusedColors = colorCodes.filter(code => !usedColors[code])
+    const unusedColors = colorCodes.filter((code) => !usedColors[code])
     if (unusedColors.length === 0) {
         // All colors have been used, just select a random color
         return colorCodes[Math.floor(Math.random() * colorCodes.length)]
@@ -56,35 +56,47 @@ function colorizeMessage(loggerName: string): string {
 function getStream() {
     return prettyPrint({
         customPrettifiers: {
-            name: msg => colorizeMessage(`${msg}`),
+            name: (msg) => colorizeMessage(`${msg}`),
         },
     })
 }
 
 export function getHttpLogger() {
-    return pinoHttp({
-        name: 'http',
-        level: config.log.httpLevel
-    }, getStream())
+    return pinoHttp(
+        {
+            name: 'http',
+            level: config.log.httpLevel,
+        },
+        getStream()
+    )
 }
 
 export function getWaLogger() {
-    return pino({
-        name: `wasock`,
-        level: config.log.waLevel,
-    }, getStream())
+    return pino(
+        {
+            name: `wasock`,
+            level: config.log.waLevel,
+        },
+        getStream()
+    )
 }
 
 export function getWaCacheLogger() {
-    return pino({
-        name: `cache`,
-        level: config.log.waLevel,
-    }, getStream())
+    return pino(
+        {
+            name: `cache`,
+            level: config.log.waLevel,
+        },
+        getStream()
+    )
 }
 
 export default function getLogger(name: string) {
-    return pino({
-        name: name,
-        level: config.log.level,
-    }, getStream())
+    return pino(
+        {
+            name: name,
+            level: config.log.level,
+        },
+        getStream()
+    )
 }

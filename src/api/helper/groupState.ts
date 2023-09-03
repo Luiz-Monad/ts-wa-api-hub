@@ -11,13 +11,14 @@ const logger = getLogger('group')
 export default async function useGroupState(app: AppType, key: string) {
     const db = getDatabaseService(app)
     const groupChatTable = db.table<ChatType>(`${key}-group-chat`)
-    const fixParticipant = (p: GroupParticipant) => ({ 
-        userJid: p.id, 
-        rank: p.admin === 'superadmin'
-            ? ChatParticipantType.Rank.SUPERADMIN
-            : p.admin === 'admin'
-            ? ChatParticipantType.Rank.ADMIN
-            : ChatParticipantType.Rank.REGULAR,
+    const fixParticipant = (p: GroupParticipant) => ({
+        userJid: p.id,
+        rank:
+            p.admin === 'superadmin'
+                ? ChatParticipantType.Rank.SUPERADMIN
+                : p.admin === 'admin'
+                ? ChatParticipantType.Rank.ADMIN
+                : ChatParticipantType.Rank.REGULAR,
     })
     const fixChatId = (chat: Partial<GroupMetadata>, _chatId: string): ChatType => ({
         _id: _chatId,
@@ -42,10 +43,10 @@ export default async function useGroupState(app: AppType, key: string) {
                 const save = {
                     participant: group.participants.map(fixParticipant),
                     ...(group.creation ? { createdAt: group.creation } : {}),
-                    ...(group.subjectOwner ? { createdBy: group.subjectOwner } : {})
+                    ...(group.subjectOwner ? { createdBy: group.subjectOwner } : {}),
                 }
                 await groupChatTable.updateOne({ _id: group.id }, save, { upsert: true })
-            }            
+            }
             const tasks = []
             for (const value of Object.values(participants)) {
                 tasks.push(task(value))
@@ -68,7 +69,9 @@ export default async function useGroupState(app: AppType, key: string) {
             }
             await Promise.all(tasks)
         },
-        updateGroupParticipants: async (group: BaileysEventMap['group-participants.update']) => {
+        updateGroupParticipants: async (
+            group: BaileysEventMap['group-participants.update']
+        ) => {
             let is_owner = false
             const chat = await groupChatTable.findOne({ _id: group.id })
             if (!chat) return
@@ -82,7 +85,7 @@ export default async function useGroupState(app: AppType, key: string) {
                 case 'add':
                     for (const participant of group.participants) {
                         parts[participant] = {
-                            userJid: participant
+                            userJid: participant,
                         }
                     }
                     break
@@ -112,12 +115,14 @@ export default async function useGroupState(app: AppType, key: string) {
                     }
                     break
             }
-            if (is_owner) {                
+            if (is_owner) {
                 const data = { _deleted: true }
                 await groupChatTable.updateOne({ _id: group.id }, data)
             } else {
                 const save = {
-                    participant: Object.values(parts).filter(p => !!p).map(p => p!),
+                    participant: Object.values(parts)
+                        .filter((p) => !!p)
+                        .map((p) => p!),
                 }
                 await groupChatTable.updateOne({ _id: group.id }, save, { upsert: true })
             }

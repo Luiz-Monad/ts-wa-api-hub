@@ -29,9 +29,9 @@ export default async function useChatState(app: AppType, key: string) {
         ...chat,
         _id: _chatId,
         id: _chatId,
-        messages: (chat.messages ?? []).map(h => ({
+        messages: (chat.messages ?? []).map((h) => ({
             ...h,
-            message: fixMessageInfo(h.message ?? {}, h?.message?.key?.id ?? uuidv4())
+            message: fixMessageInfo(h.message ?? {}, h?.message?.key?.id ?? uuidv4()),
         })),
     })
     const fixChat = (chat: Partial<Chat>) => fixChatId(chat, chat.id ?? uuidv4())

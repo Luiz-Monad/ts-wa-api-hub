@@ -27,11 +27,19 @@ export class Table<T> {
         throw new Error('Method not implemented.')
     }
 
-    replaceOne(indexer: Keyed<T>, record: T, options?: { upsert: boolean }): Promise<void> {
+    replaceOne(
+        indexer: Keyed<T>,
+        record: T,
+        options?: { upsert: boolean }
+    ): Promise<void> {
         throw new Error('Method not implemented.')
     }
 
-    updateOne(indexer: Keyed<T>, record: Partial<T>, options?: { upsert: boolean }): Promise<void> {
+    updateOne(
+        indexer: Keyed<T>,
+        record: Partial<T>,
+        options?: { upsert: boolean }
+    ): Promise<void> {
         throw new Error('Method not implemented.')
     }
 

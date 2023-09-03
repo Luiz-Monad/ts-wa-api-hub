@@ -93,13 +93,7 @@ export const MediaButton: ReqHandler = async (req, res) => {
 }
 
 export const SetStatus: ReqHandler = async (req, res) => {
-    const presenceList = [
-        'unavailable',
-        'available',
-        'composing',
-        'recording',
-        'paused',
-    ]
+    const presenceList = ['unavailable', 'available', 'composing', 'recording', 'paused']
     if (presenceList.indexOf(req.body.status) === -1) {
         return res.status(400).json({
             error: true,
@@ -117,6 +111,10 @@ export const Read: ReqHandler = async (req, res) => {
 }
 
 export const React: ReqHandler = async (req, res) => {
-    const data = await getInstanceForReq(req).reactMessage(req.body.id, req.body.key, req.body.emoji)
+    const data = await getInstanceForReq(req).reactMessage(
+        req.body.id,
+        req.body.key,
+        req.body.emoji
+    )
     return res.status(201).json({ error: false, data: data })
 }

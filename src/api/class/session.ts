@@ -14,8 +14,8 @@ class Session {
     }
 
     async restoreSessions() {
-        let restoredSessions: string[] = []
-        let allCollections: string[] = []
+        const restoredSessions: string[] = []
+        const allCollections: string[] = []
         try {
             const instances = getInstanceService(this.app).instances
             const db = getDatabaseService(this.app)

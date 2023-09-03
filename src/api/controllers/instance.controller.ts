@@ -13,7 +13,7 @@ export const init: ReqHandler = async (req, res) => {
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
     const instance = new WhatsAppInstance(req.app, key, webhook, webhookUrl, websocket)
     const data = await instance.init()
-    let instances = getInstanceService(req.app).instances
+    const instances = getInstanceService(req.app).instances
     instances[data.key] = data
     res.json({
         error: false,
@@ -96,7 +96,7 @@ export const restore: ReqHandler = async (req, res, next) => {
 export const logout: ReqHandler = async (req, res) => {
     let errormsg
     try {
-        await getInstanceForReq(req).instance?.sock?.logout()
+        await getInstanceForReq(req).logout()
     } catch (error) {
         errormsg = error
     }
@@ -111,7 +111,7 @@ export const remove: ReqHandler = async (req, res) => {
     let errormsg
     try {
         await getInstanceForReq(req).deleteInstance(<string>req.query.key)
-        let instances = getInstanceService(req.app).instances
+        const instances = getInstanceService(req.app).instances
         delete instances[<string>req.query.key]
     } catch (error) {
         errormsg = error
@@ -125,7 +125,7 @@ export const remove: ReqHandler = async (req, res) => {
 
 export const list: ReqHandler = async (req, res) => {
     if (req.query.active) {
-        let instance: string[] = []
+        const instance: string[] = []
         const db = getDatabaseService(req.app)
         const result = await db.listTable()
         result.forEach((table) => {

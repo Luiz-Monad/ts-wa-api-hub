@@ -21,14 +21,14 @@
             "command": "yarn run start",
             "group": "build",
             "problemMatcher": [],
-            "label": "yarn: start"
+            "label": "start"
         },
         {
             "type": "shell",
             "command": "yarn run watch",
             "group": "build",
             "problemMatcher": ["$tsc"],
-            "label": "yarn: watch",
+            "label": "watch",
             "isBackground": true
         },
         {
@@ -36,15 +36,57 @@
             "command": "yarn run debug",
             "group": "build",
             "problemMatcher": ["$tsc"],
-            "label": "yarn: debug",
+            "label": "debug",
             "isBackground": true
+        },
+        {
+            "type": "shell",
+            "command": "yarn run build",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "build"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run test",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "test"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run test:watch",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "test:watch"
         },
         {
             "type": "shell",
             "command": "yarn run lint:check",
             "group": "build",
             "problemMatcher": [],
-            "label": "yarn: lint:check"
+            "label": "lint:check"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run lint:fix",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "lint:fix"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run format:check",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "format:check"
+        },
+        {
+            "type": "shell",
+            "command": "yarn run format:write",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "format:write"
         }
     ]
 }

@@ -632,7 +632,8 @@ class WhatsAppInstance {
         url: string,
         type: MediaType,
         mimeType: string,
-        caption?: string
+        caption?: string,
+        fileName?: string
     ) {
         try {
             await this._verifyId(this._getWhatsAppId(to))
@@ -644,6 +645,7 @@ class WhatsAppInstance {
                     caption,
                     url,
                     mimeType,
+                    fileName,
                 })
             )
             return data
@@ -763,7 +765,7 @@ class WhatsAppInstance {
             const result = await this.sock?.sendMessage(this._getWhatsAppId(to), {
                 image: { url: data.image! },
                 footer: data.footerText ?? '',
-                caption: data.text,
+                caption: data.text ?? '',
                 templateButtons: processButton(data.buttons),
                 mimetype: data.mimeType,
                 viewOnce: true,
@@ -825,7 +827,7 @@ class WhatsAppInstance {
         try {
             const group = await this.sock?.groupCreate(
                 name,
-                users.map(this._getWhatsAppId)
+                this._parseParticipants(users),
             )
             return group
         } catch (e) {

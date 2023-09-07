@@ -10,6 +10,6 @@
             "name": "Attach to debugger",
             "port": 9229,
             "preLaunchTask": "yarn: debug"
-        },
+        }
     ]
 }

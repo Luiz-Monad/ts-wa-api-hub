@@ -16,7 +16,8 @@
         "format:write": "prettier --write .",
         "lint:check": "eslint .",
         "lint:fix": "eslint --fix .",
-        "test": "ts-jest tests/*.test.ts --exit",
+        "test": "jest",
+        "test:watch": "nodemon --verbose --watch ./tests/ --ext ts --exec yarn test",
         "configure-husky": "npx husky install && npx husky add .husky/pre-commit \"npx --no-install lint-staged\"",
         "sleep": "node -e \"setTimeout(() => process.exit(0), 2000)\""
     },
@@ -63,7 +64,7 @@
     },
     "devDependencies": {
         "@types/express": "^4.17.17",
-        "@types/jest": "^29.5.3",
+        "@types/jest": "^29.5.4",
         "@types/multer": "^1.4.7",
         "@types/pino-http": "^5.8.1",
         "@types/pino-pretty": "^5.0.0",
@@ -78,12 +79,12 @@
         "eslint": "^8.28.0",
         "eslint-config-prettier": "^8.5.0",
         "husky": "^8.0.2",
-        "jest": "^29.6.2",
+        "jest": "^29.6.4",
         "lint-staged": "^13.0.4",
-        "nodemon": "^2.0.20",
+        "nodemon": "^3.0.1",
         "prettier": "^2.8.0",
         "supertest": "^6.3.1",
         "ts-jest": "^29.1.1",
-        "typescript": "^5.1.6"
+        "typescript": "^5.2.2"
     }
 }

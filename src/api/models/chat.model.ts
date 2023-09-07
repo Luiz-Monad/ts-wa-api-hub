@@ -1,6 +1,10 @@
 import { proto } from '@whiskeysockets/baileys/WAProto'
 import MessageInfoType from './message.model'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
+
 export namespace ChatParticipantType {
     /** Rank enum. */
     export enum Rank {

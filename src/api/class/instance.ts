@@ -9,9 +9,8 @@ import useMessageState, { MessageState } from '../helper/messageState'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import processMessage, { MediaType } from '../helper/processmessage'
 import { AppType, FileType } from '../helper/types'
-import getWebHookService, { WebHook } from '../service/webhook'
-import getWebSocketService, { WebSocket } from '../service/websocket'
-import { CallBackType } from './callback'
+import getCallbackService from '../service/callback'
+import { CallBackType, Callback } from './callback'
 import { Boom } from '@hapi/boom'
 import {
     DisconnectReason,
@@ -80,8 +79,7 @@ class WhatsAppInstance {
     chatState: ChatState | null = null
     groupState: GroupState | null = null
     messageState: MessageState | null = null
-    webHookInstance: WebHook | null = null
-    webSocketInstance: WebSocket | null = null
+    callbackInstance: Callback | null = null
 
     instance = {
         qr: '',
@@ -96,22 +94,18 @@ class WhatsAppInstance {
     constructor(
         app: AppType,
         key?: string,
-        allowWebhook?: boolean,
-        webhook?: string | null,
-        allowWebsocket?: boolean
+        allowCallback?: boolean,
+        callbackAddress?: string | null,
     ) {
         this.app = app
         this.key = key ? key : uuidv4()
-        this.webHookInstance = getWebHookService(this.app)
-        if (allowWebhook) this.webHookInstance = this.webHookInstance.enable(webhook)
-        this.webSocketInstance = getWebSocketService(this.app)
-        if (allowWebsocket) this.webSocketInstance = this.webSocketInstance.enable()
+        this.callbackInstance = getCallbackService(this.app)
+        if (allowCallback) this.callbackInstance = this.callbackInstance.enable(callbackAddress)
     }
 
     async _sendCallback(type: CallBackType, body: any, key: string) {
         logger.debug(body, `callback: ${type}`)
-        this.webSocketInstance?.sendCallback(type, body, key)
-        this.webHookInstance?.sendCallback(type, body, key)
+        this.callbackInstance?.sendCallback(type, body, key)
     }
 
     async init() {
@@ -551,11 +545,10 @@ class WhatsAppInstance {
         return {
             instance_key: key,
             phone_connected: this.instance?.online,
-            webhookEnabled: this.webHookInstance?.enabled,
-            webhookUrl: this.webHookInstance?.webHookUrl,
-            webhookFilters: this.webHookInstance?.filters,
-            websocketEnabled: this.webSocketInstance?.enabled,
-            websocketFilters: this.webSocketInstance?.filters,
+            callbackEnabled: this.callbackInstance?.enabled,
+            callbackUrl: this.callbackInstance?.address,
+            callbackFilters: this.callbackInstance?.filters,
+            callbackService: this.callbackInstance?.serviceName,
             user: this.instance?.online ? this.sock?.user : {},
         }
     }

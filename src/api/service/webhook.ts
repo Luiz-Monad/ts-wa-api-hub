@@ -3,22 +3,21 @@ import axios, { AxiosInstance } from 'axios'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
 import { Callback } from '../class/callback'
+import getCallbackService from './callback'
 
 const logger = getLogger('webhook')
 
 export class WebHook extends Callback {
-    webHookUrl: string | null
     axiosInstance: AxiosInstance | null = null
 
-    constructor(webHookUrl: string | null, enabled: boolean, filters: string | null) {
-        super(enabled, filters)
-        this.webHookUrl = webHookUrl
+    constructor(address: string | null, enabled: boolean, filters: string | null) {
+        super('WebHook', enabled, address, filters)
     }
 
     async coreSendCallback(type: string, body: any, key: string) {
-        if (!this.axiosInstance && this.webHookUrl) {
+        if (!this.axiosInstance && this.address) {
             this.axiosInstance = axios.create({
-                baseURL: this.webHookUrl,
+                baseURL: this.address,
             })
         }
         this.axiosInstance
@@ -30,11 +29,8 @@ export class WebHook extends Callback {
             .catch(() => {})
     }
 
-    enable(customWebhook?: string | null) {
-        if (customWebhook) {
-            return new WebHook(customWebhook, true, this.filters)
-        }
-        return new WebHook(this.webHookUrl, true, this.filters)
+    coreEnable(address: string | null): Callback {
+        return new WebHook(address, true, this.filters)
     }
 }
 
@@ -42,7 +38,9 @@ export async function initWebHookService(app: AppType, server: ServerType) {
     const enabled = config.webhookEnabled
     const webhookUrl = config.webhookUrl ?? null
     const filters = config.webhookAllowedEvents ?? null
-    app.set('WebHookService', new WebHook(webhookUrl, enabled, filters))
+    const webhook = new WebHook(webhookUrl, enabled, filters)
+    app.set('WebHookService', webhook)
+    getCallbackService(app).register(webhook)
     if (enabled) logger.info(`Using WebHooks service at ${webhookUrl}`)
 }
 

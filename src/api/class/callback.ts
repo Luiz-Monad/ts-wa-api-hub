@@ -1,3 +1,4 @@
+
 const callBackFilters = {
     'connection:close': ['all', 'connection', 'connection.update', 'connection:close'],
     'connection:open': ['all', 'connection', 'connection.update', 'connection:open'],
@@ -19,12 +20,16 @@ const callBackFilters = {
 export type CallBackType = keyof typeof callBackFilters
 
 export class Callback {
+    serviceName: string = ''
     enabled: boolean = false
+    address: string | null = null
     filters: string | null = null
     filterList: string[] = []
 
-    constructor(enabled: boolean, filters: string | null) {
+    constructor(serviceName: string, enabled: boolean, address: string | null, filters: string | null) {
+        this.serviceName = serviceName
         this.enabled = enabled
+        this.address = address
         this.filterList = filters?.split(',') || ['all']
     }
 
@@ -36,5 +41,16 @@ export class Callback {
         }
     }
 
-    async coreSendCallback(type: string, body: any, key: string) {}
+    async coreSendCallback(type: string, body: any, key: string) {
+        throw new Error('Method not implemented.')
+    }
+
+    enable(address: string | null | undefined): Callback {
+        const addr = address ?? this.address
+        return this.coreEnable(addr)
+    }
+
+    coreEnable(address: string | null): Callback {
+        throw new Error('Method not implemented.')
+    }
 }

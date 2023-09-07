@@ -11,7 +11,7 @@ export const init: ReqHandler = async (req, res) => {
     const webhookUrl = !req.query.webhook ? null : <string>req.query.webhookUrl
     const websocket = !req.query.websocket ? false : !!req.query.websocket
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(req.app, key, webhook, webhookUrl, websocket)
+    const instance = new WhatsAppInstance(req.app, key, webhook || websocket, webhookUrl)
     const data = await instance.init()
     const instances = getInstanceService(req.app).instances
     instances[data.key] = data

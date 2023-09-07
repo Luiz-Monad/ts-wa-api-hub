@@ -13,6 +13,7 @@ import { ErrHandler } from './api/helper/types'
 import { initDatabaseService } from './api/service/database'
 import { initInstanceService } from './api/service/instance'
 import { initSessionService } from './api/service/session'
+import { initCallbackService } from './api/service/callback'
 import { initWebHookService } from './api/service/webhook'
 import { initWebSocketService } from './api/service/websocket'
 
@@ -24,6 +25,7 @@ server.listen(config.port, async () => {
     await initDatabaseService(app)
     await initInstanceService(app)
     await initSessionService(app)
+    await initCallbackService(app, server)
     await initWebHookService(app, server)
     await initWebSocketService(app, server)
 })

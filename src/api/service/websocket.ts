@@ -3,6 +3,7 @@ import { Server } from 'socket.io'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
 import { Callback } from '../class/callback'
+import getCallbackService from './callback'
 
 const logger = getLogger('websocket')
 
@@ -11,7 +12,7 @@ export class WebSocket extends Callback {
     io: Server | null = null
 
     constructor(appServer: ServerType, enabled: boolean, filters: string | null) {
-        super(enabled, filters)
+        super('WebSocket', enabled, '<ws>', filters)
         this.appServer = appServer
     }
 
@@ -25,7 +26,7 @@ export class WebSocket extends Callback {
         })
     }
 
-    enable() {
+    coreEnable(address: string | null): Callback {
         return new WebSocket(this.appServer, true, this.filters)
     }
 }
@@ -33,7 +34,9 @@ export class WebSocket extends Callback {
 export async function initWebSocketService(app: AppType, server: ServerType) {
     const enabled = config.websocketEnabled
     const filters = config.webhookAllowedEvents ?? null
-    app.set('WebSocketService', new WebSocket(server, enabled, filters))
+    const websocket = new WebSocket(server, enabled, filters)
+    app.set('WebSocketService', websocket)
+    getCallbackService(app).register(websocket)
     if (enabled) logger.info('Using WebSocket service')
 }
 

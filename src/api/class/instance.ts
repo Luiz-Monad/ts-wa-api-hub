@@ -782,7 +782,10 @@ class WhatsAppInstance {
         try {
             await this._verifyId(this._getWhatsAppId(to))
 
-            const result = await this.sock?.sendPresenceUpdate(status, to)
+            const result = await this.sock?.sendPresenceUpdate(
+                status,
+                this._getWhatsAppId(to)
+            )
             return result
         } catch (e) {
             const msg = 'Unable to set user status'
@@ -795,7 +798,10 @@ class WhatsAppInstance {
     async updateProfilePicture(id: string, url: string) {
         try {
             const img = await axios.get(url, { responseType: 'arraybuffer' })
-            const res = await this.sock?.updateProfilePicture(id, img.data)
+            const res = await this.sock?.updateProfilePicture(
+                this._getWhatsAppId(id),
+                img.data
+            )
             return res
         } catch (e) {
             const msg = 'Unable to update profile picture'
@@ -808,7 +814,7 @@ class WhatsAppInstance {
     async getUserOrGroupById(id: string) {
         try {
             if (!this.groupState) return
-            const group = await this.groupState.findGroupChat(id)
+            const group = await this.groupState.findGroupChat(this._getWhatsAppId(id))
             if (!group) throw new Error('unable to get group, check if the group exists')
             return group
         } catch (e) {
@@ -827,7 +833,7 @@ class WhatsAppInstance {
         try {
             const group = await this.sock?.groupCreate(
                 name,
-                this._parseParticipants(users),
+                this._parseParticipants(users)
             )
             return group
         } catch (e) {
@@ -900,9 +906,9 @@ class WhatsAppInstance {
     async leaveGroup(id: string) {
         try {
             if (!this.groupState) throw new Error('not initialized')
-            const group = await this.groupState.findGroupChat(id)
+            const group = await this.groupState.findGroupChat(this._getWhatsAppId(id))
             if (!group) throw new Error('no group exists')
-            return await this.sock?.groupLeave(id)
+            return await this.sock?.groupLeave(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error leave group failed'
             logger.error(e, msg)
@@ -913,10 +919,10 @@ class WhatsAppInstance {
     async getInviteCodeGroup(id: string) {
         try {
             if (!this.groupState) throw new Error('not initialized')
-            const group = await this.groupState.findGroupChat(id)
+            const group = await this.groupState.findGroupChat(this._getWhatsAppId(id))
             if (!group)
                 throw new Error('unable to get invite code, check if the group exists')
-            return await this.sock?.groupInviteCode(id)
+            return await this.sock?.groupInviteCode(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error get invite group failed'
             logger.error(e, msg)
@@ -926,7 +932,7 @@ class WhatsAppInstance {
 
     async getInstanceInviteCodeGroup(id: string) {
         try {
-            return await this.sock?.groupInviteCode(id)
+            return await this.sock?.groupInviteCode(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error get instance invite code group failed'
             logger.error(e, msg)
@@ -1012,9 +1018,14 @@ class WhatsAppInstance {
     async readMessage(msgObj: MessageKey) {
         try {
             const key = {
-                remoteJid: msgObj.remoteJid,
+                ...(msgObj.remoteJid
+                    ? { remoteJid: this._getWhatsAppId(msgObj.remoteJid) }
+                    : {}),
                 id: msgObj.id,
-                participant: msgObj?.participant, // required when reading a msg from group
+                // required when reading a msg from group
+                ...(msgObj.participant
+                    ? { participant: this._getWhatsAppId(msgObj.participant) }
+                    : {}),
             }
             const res = await this.sock?.readMessages([key])
             return res
@@ -1030,7 +1041,12 @@ class WhatsAppInstance {
             const reactionMessage = {
                 react: {
                     text: emoji, // use an empty string to remove the reaction
-                    key: key,
+                    key: {
+                        ...key,
+                        ...(key.remoteJid
+                            ? { remoteJid: this._getWhatsAppId(key.remoteJid) }
+                            : {}),
+                    },
                 },
             }
             const res = await this.sock?.sendMessage(
@@ -1049,7 +1065,7 @@ class WhatsAppInstance {
         try {
             return await this.sock?.logout()
         } catch (e) {
-            const msg = 'Error react message failed'
+            const msg = 'Error logout failed'
             logger.error(e, msg)
             throw new Error(msg)
         }

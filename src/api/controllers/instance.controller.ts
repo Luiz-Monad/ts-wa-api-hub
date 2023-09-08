@@ -1,9 +1,8 @@
 import WhatsAppInstance from '../class/instance'
 import config from '../../config/config'
-import Session from '../class/session'
 import { ReqHandler } from '../helper/types'
 import getInstanceForReq, { getInstanceService } from '../service/instance'
-import getDatabaseService from '../service/database'
+import getSessionService from '../service/session'
 
 export const init: ReqHandler = async (req, res) => {
     const key = <string>req.query.key
@@ -13,8 +12,7 @@ export const init: ReqHandler = async (req, res) => {
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
     const instance = new WhatsAppInstance(req.app, key, webhook || websocket, webhookUrl)
     const data = await instance.init()
-    const instances = getInstanceService(req.app).instances
-    instances[data.key] = data
+    getInstanceService(req.app).register(data)
     res.json({
         error: false,
         message: 'Initializing successfully',
@@ -84,8 +82,8 @@ export const info: ReqHandler = async (req, res) => {
 }
 
 export const restore: ReqHandler = async (req, res, next) => {
-    const session = new Session(req.app)
-    const restoredSessions = await session.restoreSessions()
+    const session = getSessionService(req.app)
+    const restoredSessions = await session.instance.restoreSessions()
     return res.json({
         error: false,
         message: 'All instances restored',
@@ -110,9 +108,9 @@ export const logout: ReqHandler = async (req, res) => {
 export const remove: ReqHandler = async (req, res) => {
     let errormsg
     try {
-        await getInstanceForReq(req).deleteInstance(<string>req.query.key)
-        const instances = getInstanceService(req.app).instances
-        delete instances[<string>req.query.key]
+        const instance = getInstanceForReq(req)
+        await instance.deleteInstance(<string>req.query.key)
+        getInstanceService(req.app).unregister(instance)
     } catch (error) {
         errormsg = error
     }
@@ -124,30 +122,29 @@ export const remove: ReqHandler = async (req, res) => {
 }
 
 export const list: ReqHandler = async (req, res) => {
+    const service = getInstanceService(req.app)
+    const readDetails = async (keys: string[]) => {
+        const instances = []
+        for (const key of keys) {
+            try {
+                instances.push(await service.get(key).getInstanceDetail(key))
+            } catch {
+            }
+        }
+        return instances
+    }
     if (req.query.active) {
-        const instance: string[] = []
-        const db = getDatabaseService(req.app)
-        const result = await db.listTable()
-        result.forEach((table) => {
-            instance.push(table.name)
-        })
-
+        const instances = service.list()
         return res.json({
             error: false,
-            message: 'All active instance',
-            data: instance,
+            message: 'All active instances',
+            data: await readDetails(instances),
         })
     }
-
-    const instances = getInstanceService(req.app).instances
-    const instance = Object.keys(instances).map(async (key) =>
-        instances[key].getInstanceDetail(key)
-    )
-    const data = await Promise.all(instance)
-
+    const keys = await getSessionService(req.app).instance.readSessions()
     return res.json({
         error: false,
-        message: 'All instance listed',
-        data: data,
+        message: 'All instances listed',
+        data: await readDetails(keys),
     })
 }

@@ -21,7 +21,7 @@ export async function initDatabaseService(app: AppType) {
     if (!database) return
 
     logger.info(`Database enabled: ${config.database.kind}`)
-    app.set('databaseService', database)
+    app.set('DatabaseService', database)
 }
 
 export default function getDatabaseService(app: AppType): Database {

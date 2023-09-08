@@ -6,18 +6,19 @@ import getLogger from '../../config/logging'
 const logger = getLogger('session')
 
 interface Session {
-    instance?: WhatsAppSession
+    instance: WhatsAppSession
 }
 
 export async function initSessionService(app: AppType) {
-    const session: Session = {}
-    if (config.instance.restoreSessionsOnStartup) {
-        logger.info('Restoring Sessions')
-        session.instance = new WhatsAppSession(app)
-        const restoreSessions = await session.instance.restoreSessions()
-        logger.info(`${restoreSessions.length} Session(s) Restored`)
+    const instance = new WhatsAppSession(app)    
+    const session: Session = {
+        instance: instance
     }
     app.set('SessionService', session)
+    if (!config.instance.restoreSessionsOnStartup) return
+    logger.info('Restoring Sessions')
+    const sessions = await instance.restoreSessions()
+    logger.info(`${sessions.length} Session(s) Restored`)
 }
 
 export default function getSessionService(app: AppType): Session {

@@ -15,22 +15,17 @@ class Session {
 
     async restoreSessions() {
         const restoredSessions: string[] = []
-        const allCollections: string[] = []
         try {
-            const instances = getInstanceService(this.app).instances
+            const service = getInstanceService(this.app)
             const db = getDatabaseService(this.app)
-            const result = await db.listTable()
-            result.forEach((collection) => {
-                allCollections.push(collection.name)
-            })
-
-            for await (const key of allCollections) {
+            const sessions = await this.readSessions()
+            for (const key of sessions) {
                 try {
                     const query = {}
                     const _ = await db.table(key).find(query)
                     const instance = new WhatsAppInstance(this.app, key)
                     await instance.init()
-                    instances[key] = instance
+                    service.register(instance)
                     restoredSessions.push(key)
                 } catch (e) {
                     logger.error(e, `Error restoring session ${key}`)
@@ -40,6 +35,16 @@ class Session {
             logger.error(e, 'Error restoring sessions')
         }
         return restoredSessions
+    }
+
+    async readSessions() {
+        const instances: string[] = []
+        const db = getDatabaseService(this.app)
+        const result = await db.listTable()
+        result.forEach((table) => {
+            instances.push(table.name)
+        })
+        return instances
     }
 }
 

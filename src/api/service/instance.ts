@@ -40,7 +40,7 @@ export async function initInstanceService(app: AppType) {
 }
 
 export function getInstanceService(app: AppType): Instance {
-    const instanceService: Instance = app.get('instanceService')
+    const instanceService: Instance = app.get('InstanceService')
     return instanceService
 }
 

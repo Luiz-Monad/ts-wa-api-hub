@@ -25,6 +25,6 @@ export async function initDatabaseService(app: AppType) {
 }
 
 export default function getDatabaseService(app: AppType): Database {
-    const DatabaseService: Database = app.get('databaseService')
+    const DatabaseService: Database = app.get('DatabaseService')
     return DatabaseService
 }

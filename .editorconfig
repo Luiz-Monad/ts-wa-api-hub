@@ -1,0 +1,6 @@
+# Top-most EditorConfig file
+root = true
+
+[*]
+# Use LF line endings for all files
+end_of_line = lf

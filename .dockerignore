@@ -1,0 +1,9 @@
+lib/**
+node_modules/**
+tmp/**
+xmpp/**
+docker-compose.yml
+Dockerfile
+*.ps1
+azure-pipelines.yml
+.env

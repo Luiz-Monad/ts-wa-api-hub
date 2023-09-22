@@ -62,6 +62,7 @@ function getStream() {
 }
 
 export function getHttpLogger() {
+    if (config.log.httpLevel === 'silent') return null
     return pinoHttp(
         {
             name: 'http',

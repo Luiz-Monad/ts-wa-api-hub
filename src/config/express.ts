@@ -15,8 +15,9 @@ if (!config.protectRoutes) {
     app.options('*', cors())
 }
 
-if (config.log.httpLevel !== 'silent') {
-    app.use(getHttpLogger())
+const httpLogger = getHttpLogger()
+if (httpLogger) {
+    app.use(httpLogger)
 }
 
 app.use(express.json())
@@ -29,7 +30,6 @@ app.set('views', path.join(__dirname, '../api/views'))
 if (config.protectRoutes) {
     app.use(tokenCheck)
 }
-app.use('/frontend', express.static('../frontend'))
 app.use('/', routes)
 app.use(error.handler)
 

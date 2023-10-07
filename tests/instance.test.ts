@@ -336,7 +336,7 @@ describe('WhatsAppInstance', () => {
                 instance,
                 '_parseParticipants'
             ) as any
-                ; (instance._verifyId as jest.Mock).mockResolvedValue(true)
+            ;(instance._verifyId as jest.Mock).mockResolvedValue(true)
         })
 
         describe('_verifyId', () => {
@@ -344,7 +344,7 @@ describe('WhatsAppInstance', () => {
             const errorMsg = 'no account exists'
 
             beforeEach(async () => {
-                ; (instance._verifyId as jest.Mock).mockRestore()
+                ;(instance._verifyId as jest.Mock).mockRestore()
             })
 
             it('should return true when id includes "@g.us"', async () => {
@@ -1933,7 +1933,7 @@ describe('WhatsAppInstance', () => {
                 const result = await instance.logout()
 
                 expect(instance.sock?.logout).toHaveBeenCalled()
-                
+
                 expect(result).toEqual(response)
             })
 

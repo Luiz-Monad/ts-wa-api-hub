@@ -95,12 +95,13 @@ class WhatsAppInstance {
         app: AppType,
         key?: string,
         allowCallback?: boolean,
-        callbackAddress?: string | null,
+        callbackAddress?: string | null
     ) {
         this.app = app
         this.key = key ? key : uuidv4()
         this.callbackInstance = getCallbackService(this.app)
-        if (allowCallback) this.callbackInstance = this.callbackInstance.enable(callbackAddress)
+        if (allowCallback)
+            this.callbackInstance = this.callbackInstance.enable(callbackAddress)
     }
 
     async _sendCallback(type: CallBackType, body: any, key: string) {

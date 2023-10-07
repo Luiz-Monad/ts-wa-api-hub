@@ -1,4 +1,3 @@
-
 const callBackFilters = {
     'connection:close': ['all', 'connection', 'connection.update', 'connection:close'],
     'connection:open': ['all', 'connection', 'connection.update', 'connection:open'],
@@ -26,7 +25,12 @@ export class Callback {
     filters: string | null = null
     filterList: string[] = []
 
-    constructor(serviceName: string, enabled: boolean, address: string | null, filters: string | null) {
+    constructor(
+        serviceName: string,
+        enabled: boolean,
+        address: string | null,
+        filters: string | null
+    ) {
         this.serviceName = serviceName
         this.enabled = enabled
         this.address = address

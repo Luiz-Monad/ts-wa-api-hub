@@ -10,9 +10,9 @@ interface Session {
 }
 
 export async function initSessionService(app: AppType) {
-    const instance = new WhatsAppSession(app)    
+    const instance = new WhatsAppSession(app)
     const session: Session = {
-        instance: instance
+        instance: instance,
     }
     app.set('SessionService', session)
     if (!config.instance.restoreSessionsOnStartup) return

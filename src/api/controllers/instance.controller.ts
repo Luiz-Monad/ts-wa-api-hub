@@ -128,8 +128,7 @@ export const list: ReqHandler = async (req, res) => {
         for (const key of keys) {
             try {
                 instances.push(await service.get(key).getInstanceDetail(key))
-            } catch {
-            }
+            } catch {}
         }
         return instances
     }

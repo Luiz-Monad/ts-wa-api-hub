@@ -1,21 +1,21 @@
 import WhatsAppInstance from '../class/instance'
 import { AppType, ReqType } from '../helper/types'
 
-type Callback = (instance: WhatsAppInstance) => void;
+type Callback = (instance: WhatsAppInstance) => void
 
 class Instance {
     private instances: Record<string, WhatsAppInstance> = {}
-    private onRegisterCallbacks: Callback[] = [];
-    private onUnregisterCallbacks: Callback[] = [];
+    private onRegisterCallbacks: Callback[] = []
+    private onUnregisterCallbacks: Callback[] = []
 
     register(instance: WhatsAppInstance) {
         this.instances[instance.key] = instance
-        this.onRegisterCallbacks.forEach(callback => callback(instance));
+        this.onRegisterCallbacks.forEach((callback) => callback(instance))
     }
 
     unregister(instance: WhatsAppInstance) {
         delete this.instances[instance.key]
-        this.onUnregisterCallbacks.forEach(callback => callback(instance));
+        this.onUnregisterCallbacks.forEach((callback) => callback(instance))
     }
 
     get(key: string): WhatsAppInstance {
@@ -27,11 +27,11 @@ class Instance {
     }
 
     onRegister(callback: Callback) {
-        this.onRegisterCallbacks.push(callback);
+        this.onRegisterCallbacks.push(callback)
     }
 
     onUnregister(callback: Callback) {
-        this.onUnregisterCallbacks.push(callback);
+        this.onUnregisterCallbacks.push(callback)
     }
 }
 

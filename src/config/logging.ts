@@ -57,8 +57,8 @@ function getStream() {
     return prettyPrint({
         ignore: 'pid,hostname',
         customPrettifiers: {
-            name: (msg) => colorizeMessage(`${msg}`),
-        },
+            name: (msg) => colorizeMessage(`${msg}`)
+        }
     })
 }
 
@@ -97,7 +97,7 @@ export default function getLogger(name: string, instanceId?: string) {
     return pino(
         {
             name: instanceId ? `${name}/${instanceId}` : name,
-            level: config.log.level,
+            level: config.log.level
         },
         getStream()
     )

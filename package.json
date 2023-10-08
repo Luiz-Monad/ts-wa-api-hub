@@ -11,7 +11,7 @@
         "build:ejs": "copyfiles -u 1 \"./src/api/views/**/*.ejs\" \"./lib\"",
         "watch": "concurrently \"yarn watch:tsc\" \"yarn sleep && yarn watch:node\"",
         "watch:tsc": "tsc --watch",
-        "watch:node": "nodemon lib/server.js",
+        "watch:node": "nodemon --inspect-brk lib/server.js",
         "format:check": "prettier --check .",
         "format:write": "prettier --write .",
         "lint:check": "eslint .",
@@ -60,7 +60,8 @@
         "qrcode-terminal": "^0.12.0",
         "sharp": "^0.30.5",
         "socket.io": "^4.7.1",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "websocket-polyfill": "^0.0.3"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",

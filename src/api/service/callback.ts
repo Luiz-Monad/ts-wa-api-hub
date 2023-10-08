@@ -3,7 +3,7 @@ import config from '../../config/config'
 import getLogger from '../../config/logging'
 import { CallBackType, Callback } from '../class/callback'
 
-const logger = getLogger('Callback')
+const logger = getLogger('callback')
 
 export class MultiCallback extends Callback {
     callbacks: Callback[] = []

@@ -1,4 +1,4 @@
-import pino, { LevelWithSilent } from 'pino'
+import pino from 'pino'
 import pinoHttp from 'pino-http'
 import prettyPrint from 'pino-pretty'
 import config from './config'
@@ -50,11 +50,12 @@ function getAnsiColor(code: number): string {
 
 function colorizeMessage(loggerName: string): string {
     const colorCode = getColorForLogger(loggerName)
-    return `${getAnsiColor(colorCode)}${loggerName}\x1b[0m`
+    return `${getAnsiColor(colorCode)}${loggerName}${getAnsiColor(0)}`
 }
 
 function getStream() {
     return prettyPrint({
+        ignore: 'pid,hostname',
         customPrettifiers: {
             name: (msg) => colorizeMessage(`${msg}`),
         },
@@ -72,30 +73,30 @@ export function getHttpLogger() {
     )
 }
 
-export function getWaLogger() {
+export function getWaLogger(instanceId: string) {
     return pino(
         {
-            name: `wasock`,
+            name: `wasock/${instanceId}`,
             level: config.log.waLevel,
         },
         getStream()
     )
 }
 
-export function getWaCacheLogger() {
+export function getWaCacheLogger(instanceId: string) {
     return pino(
         {
-            name: `cache`,
+            name: `cache/${instanceId}`,
             level: config.log.waLevel,
         },
         getStream()
     )
 }
 
-export default function getLogger(name: string) {
+export default function getLogger(name: string, instanceId?: string) {
     return pino(
         {
-            name: name,
+            name: instanceId ? `${name}/${instanceId}` : name,
             level: config.log.level,
         },
         getStream()

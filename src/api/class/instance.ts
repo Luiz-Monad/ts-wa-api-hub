@@ -21,8 +21,6 @@ import axios from 'axios'
 import QRCode from 'qrcode'
 import { v4 as uuidv4 } from 'uuid'
 
-const logger = getLogger('instance')
-
 type WASocket = ReturnType<typeof makeWASocket>
 
 // The following types are used instead of the ones from whiskeysockets because that's the public interface.
@@ -72,9 +70,9 @@ class WhatsAppInstance {
         connectTimeoutMs: 2 * 60 * 1000,
         defaultQueryTimeoutMs: 2 * 1000,
         printQRInTerminal: true,
-        logger: getWaLogger(),
     }
     key: string
+    logger: ReturnType<typeof getLogger>
     authState: AuthState | null = null
     chatState: ChatState | null = null
     groupState: GroupState | null = null
@@ -99,13 +97,14 @@ class WhatsAppInstance {
     ) {
         this.app = app
         this.key = key ? key : uuidv4()
+        this.logger = getLogger('instance', this.key)
         this.callbackInstance = getCallbackService(this.app)
         if (allowCallback)
             this.callbackInstance = this.callbackInstance.enable(callbackAddress)
     }
 
     async _sendCallback(type: CallBackType, body: any, key: string) {
-        logger.debug(body, `callback: ${type}`)
+        this.logger.debug(body, `callback: ${type}`)
         this.callbackInstance?.sendCallback(type, body, key)
     }
 
@@ -117,9 +116,10 @@ class WhatsAppInstance {
                 auth: {
                     creds: state.creds,
                     /** caching makes the store faster to send/recv messages */
-                    keys: makeCacheableSignalKeyStore(state.keys, getWaCacheLogger()),
+                    keys: makeCacheableSignalKeyStore(state.keys, getWaCacheLogger(this.key)),
                 },
-                browser: <[string, string, string]>Object.values(config.browser),
+                browser: <[string, string, string]>Object.values(config.browser),                
+                logger: getWaLogger(this.key),
                 ...this.socketConfig,
             }
             this.sock = makeWASocket(socketConfig)
@@ -127,7 +127,7 @@ class WhatsAppInstance {
             return this
         } catch (e) {
             const msg = 'Error when creating instance'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -139,7 +139,7 @@ class WhatsAppInstance {
             }
             return this
         } catch (e) {
-            logger.error(e, 'Error dropping auth state')
+            this.logger.error(e, 'Error dropping auth state')
         }
     }
 
@@ -180,22 +180,22 @@ class WhatsAppInstance {
 
         // on credentials update save state
         sock?.ev.on('creds.update', async (creds) => {
-            logger.debug(creds, 'creds.update')
+            this.logger.debug(creds, 'creds.update')
             try {
                 if (this.authState) {
                     this.authState.saveCreds()
                 }
             } catch (e) {
-                logger.error(e, 'creds.update')
+                this.logger.error(e, 'creds.update')
             }
         })
 
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
-            logger.debug(update, 'connection.update')
+            this.logger.debug(update, 'connection.update')
             try {
                 const { connection, lastDisconnect, qr } = update
-                logger.info(`STATE: ${connection}`)
+                this.logger.info(`STATE: ${connection}`)
 
                 if (connection === 'connecting') return
 
@@ -212,12 +212,12 @@ class WhatsAppInstance {
                             await this.init()
                         } else {
                             await this._drop()
-                            logger.info('STATE: Init failure')
+                            this.logger.info('STATE: Init failure')
                             this.instance.online = false
                         }
                     } else {
                         await this._drop()
-                        logger.info('STATE: Logged off')
+                        this.logger.info('STATE: Logged off')
                         this.instance.online = false
                     }
                     await this._sendCallback(
@@ -240,7 +240,7 @@ class WhatsAppInstance {
                 }
 
                 if (qr) {
-                    logger.info(`qr: ${qr}`)
+                    this.logger.info(`qr: ${qr}`)
                     QRCode.toDataURL(qr).then((base64image) => {
                         this.instance.qr = base64image
                         this.instance.qr_url = qr
@@ -254,28 +254,28 @@ class WhatsAppInstance {
                             )
                             // terminated
                             this.instance.qr = ' '
-                            logger.info('socket connection terminated')
+                            this.logger.info('socket connection terminated')
                         }
                     })
                 }
             } catch (e) {
-                logger.error(e, 'connection.update')
+                this.logger.error(e, 'connection.update')
             }
         })
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
-            logger.debug(json, 'presence.update')
+            this.logger.debug(json, 'presence.update')
             try {
                 await this._sendCallback('presence', json, this.key)
             } catch (e) {
-                logger.error(e, 'presence.update')
+                this.logger.error(e, 'presence.update')
             }
         })
 
         // on receive all chats/messages
         sock?.ev.on('messaging-history.set', async (ev) => {
-            logger.debug(ev, 'messaging-history.set')
+            this.logger.debug(ev, 'messaging-history.set')
             try {
                 if (this.chatState) {
                     await this.chatState.setChats(ev)
@@ -290,49 +290,49 @@ class WhatsAppInstance {
                     }
                 }
             } catch (e) {
-                logger.error(e, 'messaging-history.set')
+                this.logger.error(e, 'messaging-history.set')
             }
         })
 
         // on receive new chat
         sock?.ev.on('chats.upsert', async (newChat) => {
-            logger.debug(newChat, 'chats.upsert')
+            this.logger.debug(newChat, 'chats.upsert')
             try {
                 if (this.chatState) {
                     await this.chatState.upsertChats(newChat)
                 }
             } catch (e) {
-                logger.error(e, 'chats.upsert')
+                this.logger.error(e, 'chats.upsert')
             }
         })
 
         // on chat change
         sock?.ev.on('chats.update', async (changedChat) => {
-            logger.debug(changedChat, 'chats.update')
+            this.logger.debug(changedChat, 'chats.update')
             try {
                 if (this.chatState) {
                     await this.chatState.updateChats(changedChat)
                 }
             } catch (e) {
-                logger.error(e, 'chats.update')
+                this.logger.error(e, 'chats.update')
             }
         })
 
         // on chat delete
         sock?.ev.on('chats.delete', async (deletedChats) => {
-            logger.debug(deletedChats, 'chats.delete')
+            this.logger.debug(deletedChats, 'chats.delete')
             try {
                 if (this.chatState) {
                     await this.chatState.deleteChats(deletedChats)
                 }
             } catch (e) {
-                logger.error(e, 'chats.delete')
+                this.logger.error(e, 'chats.delete')
             }
         })
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            logger.debug(m, 'messages.upsert')
+            this.logger.debug(m, 'messages.upsert')
             try {
                 if (this.messageState) {
                     await this.messageState.upsertMessages(m)
@@ -403,36 +403,36 @@ class WhatsAppInstance {
                     await this._sendCallback('message', data, this.key)
                 })
             } catch (e) {
-                logger.error(e, 'messages.upsert')
+                this.logger.error(e, 'messages.upsert')
             }
         })
 
         // on mssage change
         sock?.ev.on('messages.update', async (messages) => {
-            logger.debug(messages, 'messages.update')
+            this.logger.debug(messages, 'messages.update')
             try {
                 if (this.messageState) {
                     await this.messageState.updateMessages(messages)
                 }
             } catch (e) {
-                logger.error(e, 'messages.update')
+                this.logger.error(e, 'messages.update')
             }
         })
 
         // on mssage delete
         sock?.ev.on('messages.delete', async (messages) => {
-            logger.debug(messages, 'messages.delete')
+            this.logger.debug(messages, 'messages.delete')
             try {
                 if (this.messageState) {
                     await this.messageState.deleteMessages(messages)
                 }
             } catch (e) {
-                logger.error(e, 'messages.delete')
+                this.logger.error(e, 'messages.delete')
             }
         })
 
         sock?.ws.on('CB:call', async (data) => {
-            logger.debug(data, 'CB:call')
+            this.logger.debug(data, 'CB:call')
             if (data.content) {
                 if (data.content.find((e: { tag: string }) => e.tag === 'offer')) {
                     const content = data.content.find(
@@ -474,7 +474,7 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('groups.upsert', async (newChat) => {
-            logger.debug(newChat, 'groups.upsert')
+            this.logger.debug(newChat, 'groups.upsert')
             try {
                 if (this.groupState) {
                     await this.groupState.upsertGroupChats(newChat)
@@ -487,12 +487,12 @@ class WhatsAppInstance {
                     this.key
                 )
             } catch (e) {
-                logger.error(e, 'groups.upsert')
+                this.logger.error(e, 'groups.upsert')
             }
         })
 
         sock?.ev.on('groups.update', async (newChat) => {
-            logger.debug(newChat, 'groups.update')
+            this.logger.debug(newChat, 'groups.update')
             try {
                 if (this.groupState) {
                     await this.groupState.updateGroupChats(newChat)
@@ -505,12 +505,12 @@ class WhatsAppInstance {
                     this.key
                 )
             } catch (e) {
-                logger.error(e, 'groups.update')
+                this.logger.error(e, 'groups.update')
             }
         })
 
         sock?.ev.on('group-participants.update', async (newChat) => {
-            logger.debug(newChat, 'group-participants.update')
+            this.logger.debug(newChat, 'group-participants.update')
             if (this.groupState) {
                 await this.groupState.updateGroupParticipants(newChat)
             }
@@ -537,7 +537,7 @@ class WhatsAppInstance {
             }
         } catch (e) {
             const msg = 'Error when deleting instance'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -573,7 +573,7 @@ class WhatsAppInstance {
         } catch (e) {
             if ((e as Error).message === 'no account exists') return false
             const msg = 'Unable to verify if user is on whatsapp'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -588,7 +588,7 @@ class WhatsAppInstance {
             return data
         } catch (e) {
             const msg = 'Unable to send text message'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -616,7 +616,7 @@ class WhatsAppInstance {
             return data
         } catch (e) {
             const msg = 'Unable to send media file'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -645,7 +645,7 @@ class WhatsAppInstance {
             return data
         } catch (e) {
             const msg = 'Unable to send url media file'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -661,7 +661,7 @@ class WhatsAppInstance {
             return ppUrl
         } catch (e) {
             const msg = `Unable to download user profile picture`
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -674,7 +674,7 @@ class WhatsAppInstance {
             return status
         } catch (e) {
             const msg = `Unable to get user status`
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -690,7 +690,7 @@ class WhatsAppInstance {
             return status
         } catch (e) {
             const msg = `Unable to ${data} user`
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -708,7 +708,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Unable to send button message'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -727,7 +727,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Unable to send contact message'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -747,7 +747,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Unable to send list message'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -767,7 +767,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Unable to send media button message'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -783,7 +783,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Unable to set user status'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -799,7 +799,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Unable to update profile picture'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -813,7 +813,7 @@ class WhatsAppInstance {
             return group
         } catch (e) {
             const msg = 'Error get group failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -832,7 +832,7 @@ class WhatsAppInstance {
             return group
         } catch (e) {
             const msg = 'Error create new group failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -847,7 +847,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Unable to add participant, you must be an admin in this group'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -863,7 +863,7 @@ class WhatsAppInstance {
         } catch (e) {
             const msg =
                 'Unable to promote some participants, check if you are admin in group or participants exists'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -879,7 +879,7 @@ class WhatsAppInstance {
         } catch (e) {
             const msg =
                 'Unable to demote some participants, check if you are admin in group or participants exists'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -892,7 +892,7 @@ class WhatsAppInstance {
             return await this.groupState.findGroupChats()
         } catch (e) {
             const msg = 'Unable to list all chats'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -905,7 +905,7 @@ class WhatsAppInstance {
             return await this.sock?.groupLeave(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error leave group failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -919,7 +919,7 @@ class WhatsAppInstance {
             return await this.sock?.groupInviteCode(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error get invite group failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -929,7 +929,7 @@ class WhatsAppInstance {
             return await this.sock?.groupInviteCode(this._getWhatsAppId(id))
         } catch (e) {
             const msg = 'Error get instance invite code group failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -940,7 +940,7 @@ class WhatsAppInstance {
             return result
         } catch (e) {
             const msg = 'Error group fetch all participating failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -960,7 +960,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = `Unable to ${action} some participants, check if you are admin in group or participants exists`
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -976,7 +976,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = `Unable to ${action} check if you are admin in group`
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -990,7 +990,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Unable to update subject check if you are admin in group'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -1004,7 +1004,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Unable to update description check if you are admin in group'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -1025,7 +1025,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Error read message failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -1050,7 +1050,7 @@ class WhatsAppInstance {
             return res
         } catch (e) {
             const msg = 'Error react message failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }
@@ -1060,7 +1060,7 @@ class WhatsAppInstance {
             return await this.sock?.logout()
         } catch (e) {
             const msg = 'Error logout failed'
-            logger.error(e, msg)
+            this.logger.error(e, msg)
             throw new Error(msg)
         }
     }

@@ -9,11 +9,11 @@ const logger = getLogger('session')
 class Session {
     app: AppType
 
-    constructor(app: AppType) {
+    constructor (app: AppType) {
         this.app = app
     }
 
-    async restoreSessions() {
+    async restoreSessions () {
         const restoredSessions: string[] = []
         try {
             const service = getInstanceService(this.app)
@@ -37,7 +37,7 @@ class Session {
         return restoredSessions
     }
 
-    async readSessions() {
+    async readSessions () {
         const instances: string[] = []
         const db = getDatabaseService(this.app)
         const result = await db.listTable()

@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const logger = getLogger('chat')
 
-export default async function useChatState(app: AppType, key: string) {
+export default async function useChatState (app: AppType, key: string) {
     const db = getDatabaseService(app)
     const chatTable = db.table<ChatType>(`${key}-chat`)
     const fixKey = (key: Partial<proto.IMessageKey>, _id: string) => ({

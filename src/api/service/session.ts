@@ -9,7 +9,7 @@ interface Session {
     instance: WhatsAppSession
 }
 
-export async function initSessionService(app: AppType) {
+export async function initSessionService (app: AppType) {
     const instance = new WhatsAppSession(app)
     const session: Session = {
         instance: instance,
@@ -21,7 +21,7 @@ export async function initSessionService(app: AppType) {
     logger.info(`${sessions.length} Session(s) Restored`)
 }
 
-export default function getSessionService(app: AppType): Session {
+export default function getSessionService (app: AppType): Session {
     const SessionService: Session = app.get('SessionService')
     return SessionService
 }

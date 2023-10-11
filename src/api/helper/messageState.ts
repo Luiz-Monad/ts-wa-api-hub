@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const logger = getLogger('message')
 
-export default async function useMessageState(app: AppType, key: string) {
+export default async function useMessageState (app: AppType, key: string) {
     const db = getDatabaseService(app)
     const messageTable = db.table<MessageInfoType>(`${key}-message`)
     const fixKey = (

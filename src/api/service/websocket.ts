@@ -11,12 +11,12 @@ export class WebSocket extends Callback {
     appServer: ServerType
     io: Server | null = null
 
-    constructor(appServer: ServerType, enabled: boolean, filters: string | null) {
+    constructor (appServer: ServerType, enabled: boolean, filters: string | null) {
         super('WebSocket', enabled, '<ws>', filters)
         this.appServer = appServer
     }
 
-    async coreSendCallback(type: string, body: any, key: string) {
+    async coreSendCallback (type: string, body: any, key: string) {
         if (!this.io) {
             this.io = new Server(this.appServer)
         }
@@ -26,12 +26,12 @@ export class WebSocket extends Callback {
         })
     }
 
-    coreEnable(address: string | null): Callback {
+    coreEnable (address: string | null): Callback {
         return new WebSocket(this.appServer, true, this.filters)
     }
 }
 
-export async function initWebSocketService(app: AppType, server: ServerType) {
+export async function initWebSocketService (app: AppType, server: ServerType) {
     const enabled = config.websocketEnabled
     const filters = config.webhookAllowedEvents ?? null
     const websocket = new WebSocket(server, enabled, filters)
@@ -40,7 +40,7 @@ export async function initWebSocketService(app: AppType, server: ServerType) {
     if (enabled) logger.info('Using WebSocket service')
 }
 
-export default function getWebSocketService(app: AppType): WebSocket {
+export default function getWebSocketService (app: AppType): WebSocket {
     const WebSocketService: WebSocket = app.get('WebSocketService')
     return WebSocketService
 }

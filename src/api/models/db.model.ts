@@ -25,11 +25,11 @@ export interface Record {
 export class Table<T> {
     name: string = ''
 
-    record(record: Keyed<T>): Keyed<T> & Record {
+    record (record: Keyed<T>): Keyed<T> & Record {
         throw new Error('Method not implemented.')
     }
 
-    replaceOne(
+    replaceOne (
         indexer: Keyed<T>,
         record: T,
         options?: { upsert: boolean }
@@ -37,7 +37,7 @@ export class Table<T> {
         throw new Error('Method not implemented.')
     }
 
-    updateOne(
+    updateOne (
         indexer: Keyed<T>,
         record: Partial<T>,
         options?: { upsert: boolean }
@@ -45,33 +45,33 @@ export class Table<T> {
         throw new Error('Method not implemented.')
     }
 
-    deleteOne(indexer: Keyed<T>): Promise<void> {
+    deleteOne (indexer: Keyed<T>): Promise<void> {
         throw new Error('Method not implemented.')
     }
 
-    findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
+    findOneAndDelete (indexer: Keyed<T>): Promise<Value<T> | null> {
         throw new Error('Method not implemented.')
     }
 
-    findOne(indexer: Keyed<T>): Promise<T | null> {
+    findOne (indexer: Keyed<T>): Promise<T | null> {
         throw new Error('Method not implemented.')
     }
 
-    find(indexer: Keyed<T>): Promise<T[] | null> {
+    find (indexer: Keyed<T>): Promise<T[] | null> {
         throw new Error('Method not implemented.')
     }
 
-    drop(): Promise<void> {
+    drop (): Promise<void> {
         throw new Error('Method not implemented.')
     }
 }
 
 export default class Database {
-    listTable(): Promise<Table<any>[]> {
+    listTable (): Promise<Table<any>[]> {
         throw new Error('Method not implemented.')
     }
 
-    table<T>(name: string): Table<T> {
+    table<T> (name: string): Table<T> {
         throw new Error('Method not implemented.')
     }
 }

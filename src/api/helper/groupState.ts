@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const logger = getLogger('group')
 
-export default async function useGroupState(app: AppType, key: string) {
+export default async function useGroupState (app: AppType, key: string) {
     const db = getDatabaseService(app)
     const groupChatTable = db.table<ChatType>(`${key}-group-chat`)
     const fixParticipant = (p: GroupParticipant) => ({

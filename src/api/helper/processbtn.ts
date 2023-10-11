@@ -10,7 +10,7 @@ export type Button = {
     urlButton?: { displayText: string; url: string }
 }
 
-export default function processButton(buttons?: ButtonDef[]) {
+export default function processButton (buttons?: ButtonDef[]) {
     const preparedButtons: Button[] = []
 
     buttons?.map((button) => {

@@ -11,7 +11,7 @@ export type MessageType = {
     buffer?: Readable
 }
 
-export default function processMessage(msg: MessageType) {
+export default function processMessage (msg: MessageType) {
     const baseMsg = {
         ...(msg.mimeType ? { mimetype: msg.mimeType } : {}),
     }

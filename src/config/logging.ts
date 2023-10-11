@@ -25,7 +25,7 @@ const colorCodes = [
 const loggerColors: Record<string, number> = {}
 const usedColors: Record<number, boolean> = {}
 
-function getRandomUnusedColor(): number {
+function getRandomUnusedColor (): number {
     const unusedColors = colorCodes.filter((code) => !usedColors[code])
     if (unusedColors.length === 0) {
         // All colors have been used, just select a random color
@@ -37,32 +37,32 @@ function getRandomUnusedColor(): number {
     }
 }
 
-function getColorForLogger(loggerName: string): number {
+function getColorForLogger (loggerName: string): number {
     if (!loggerColors[loggerName]) {
         loggerColors[loggerName] = getRandomUnusedColor()
     }
     return loggerColors[loggerName]
 }
 
-function getAnsiColor(code: number): string {
+function getAnsiColor (code: number): string {
     return `\x1b[${code}m`
 }
 
-function colorizeMessage(loggerName: string): string {
+function colorizeMessage (loggerName: string): string {
     const colorCode = getColorForLogger(loggerName)
     return `${getAnsiColor(colorCode)}${loggerName}${getAnsiColor(0)}`
 }
 
-function getStream() {
+function getStream () {
     return prettyPrint({
         ignore: 'pid,hostname',
         customPrettifiers: {
-            name: (msg) => colorizeMessage(`${msg}`)
-        }
+            name: (msg) => colorizeMessage(`${msg}`),
+        },
     })
 }
 
-export function getHttpLogger() {
+export function getHttpLogger () {
     if (config.log.httpLevel === 'silent') return null
     return pinoHttp(
         {
@@ -73,7 +73,7 @@ export function getHttpLogger() {
     )
 }
 
-export function getWaLogger(instanceId: string) {
+export function getWaLogger (instanceId: string) {
     return pino(
         {
             name: `wasock/${instanceId}`,
@@ -83,7 +83,7 @@ export function getWaLogger(instanceId: string) {
     )
 }
 
-export function getWaCacheLogger(instanceId: string) {
+export function getWaCacheLogger (instanceId: string) {
     return pino(
         {
             name: `cache/${instanceId}`,
@@ -93,11 +93,11 @@ export function getWaCacheLogger(instanceId: string) {
     )
 }
 
-export default function getLogger(name: string, instanceId?: string) {
+export default function getLogger (name: string, instanceId?: string) {
     return pino(
         {
             name: instanceId ? `${name}/${instanceId}` : name,
-            level: config.log.level
+            level: config.log.level,
         },
         getStream()
     )

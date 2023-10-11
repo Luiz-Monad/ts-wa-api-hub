@@ -4,7 +4,6 @@ import useAuthState from '../src/api/helper/baileysAuthState'
 import makeWASocket from '@whiskeysockets/baileys'
 import getLogger from '../src/config/logging'
 import { MediaType } from '../src/api/helper/processmessage'
-import { Button, ButtonDef } from '../src/api/helper/processbtn'
 import generateVC, { VCardData } from '../src/api/helper/genVc'
 import axios from 'axios'
 

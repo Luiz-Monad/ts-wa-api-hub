@@ -21,12 +21,12 @@ class FsRecord<T> {
     fsTable: FsTable<T>
     record: Keyed<T>
 
-    constructor(fsTable: FsTable<T>, record: Keyed<T>) {
+    constructor (fsTable: FsTable<T>, record: Keyed<T>) {
         this.fsTable = fsTable
         this.record = record
     }
 
-    async save(): Promise<void> {
+    async save (): Promise<void> {
         await this.fsTable.updateOne(this.record, this.record)
     }
 }
@@ -34,13 +34,13 @@ class FsRecord<T> {
 class FsTable<T> extends Table<T> {
     filePath: string
 
-    constructor(directory: string, name: string) {
+    constructor (directory: string, name: string) {
         super()
         this.name = name
         this.filePath = path.join(directory, `${name}.json`)
     }
 
-    async lock(): Promise<() => Promise<void>> {
+    async lock (): Promise<() => Promise<void>> {
         return await lockfile.lock(this.filePath, { realpath: false, retries: 16 })
     }
 
@@ -49,7 +49,7 @@ class FsTable<T> extends Table<T> {
     keyPredicate = (find: Keyed<T>) => (obj: Keyed<T>) =>
         this.getKey(find) === this.getKey(obj)
 
-    async load(): Promise<Keyed<T>[]> {
+    async load (): Promise<Keyed<T>[]> {
         try {
             const data = await readFile(this.filePath, 'utf-8')
             return JSON.parse(data)
@@ -62,16 +62,16 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async save(records: Keyed<T>[]): Promise<void> {
+    async save (records: Keyed<T>[]): Promise<void> {
         await writeFile(this.filePath, JSON.stringify(records, null, 2), 'utf-8')
     }
 
-    record(record: Keyed<T>): Keyed<T> & Record {
+    record (record: Keyed<T>): Keyed<T> & Record {
         const fileRecord = new FsRecord(this, record) as Record
         return Object.assign(fileRecord, record)
     }
 
-    async replaceOne(
+    async replaceOne (
         indexer: Keyed<T>,
         record: T,
         options?: { upsert: boolean }
@@ -93,7 +93,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async updateOne(
+    async updateOne (
         indexer: Keyed<T>,
         record: Partial<T>,
         options?: { upsert: boolean }
@@ -116,7 +116,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async deleteOne(indexer: Keyed<T>): Promise<void> {
+    async deleteOne (indexer: Keyed<T>): Promise<void> {
         logger.debug({ indexer }, 'delete one')
         const release = await this.lock()
         try {
@@ -134,7 +134,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async findOneAndDelete(indexer: Keyed<T>): Promise<Value<T> | null> {
+    async findOneAndDelete (indexer: Keyed<T>): Promise<Value<T> | null> {
         logger.debug({ indexer }, 'find and delete one')
         const release = await this.lock()
         try {
@@ -155,7 +155,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async findOne(indexer: Keyed<T>): Promise<T | null> {
+    async findOne (indexer: Keyed<T>): Promise<T | null> {
         logger.debug({ indexer }, 'find one')
         const release = await this.lock()
         try {
@@ -169,7 +169,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async find(indexer: Keyed<T>): Promise<T[]> {
+    async find (indexer: Keyed<T>): Promise<T[]> {
         logger.debug({ indexer }, 'find query')
         const release = await this.lock()
         try {
@@ -183,7 +183,7 @@ class FsTable<T> extends Table<T> {
         }
     }
 
-    async drop(): Promise<void> {
+    async drop (): Promise<void> {
         logger.debug({}, 'drop table')
         const release = await this.lock()
         try {
@@ -201,25 +201,25 @@ class FsDatabase extends Database {
     Chat: Table<Chat>
 
     // eslint-disable-next-line @typescript-eslint/ban-types
-    constructor(directory: string, options: {}) {
+    constructor (directory: string, options: {}) {
         super()
         this.directory = directory
         this.Chat = this.table('Chat')
     }
 
-    async listTable(): Promise<Table<any>[]> {
+    async listTable (): Promise<Table<any>[]> {
         const fileNames = await readdir(this.directory)
         return fileNames
             .filter((name) => name !== 'Chat.json' && name.endsWith('.json'))
             .map((name) => this.table(path.basename(name, '.json')))
     }
 
-    table<T>(name: string): Table<T> {
+    table<T> (name: string): Table<T> {
         return new FsTable<T>(this.directory, name)
     }
 }
 
-export default async function connectFileSystemClient(app: AppType) {
+export default async function connectFileSystemClient (app: AppType) {
     const path = config.localfs.path
     const options = config.localfs.options
 

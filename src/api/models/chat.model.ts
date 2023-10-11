@@ -5,6 +5,7 @@ import MessageInfoType from './message.model'
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ChatParticipantType {
     /** Rank enum. */
     export enum Rank {

@@ -8,34 +8,34 @@ const logger = getLogger('callback')
 export class MultiCallback extends Callback {
     callbacks: Callback[] = []
 
-    constructor() {
+    constructor () {
         super('MultiCallback', true, '*', null)
     }
 
-    async sendCallback(type: CallBackType, body: any, key: string) {
+    async sendCallback (type: CallBackType, body: any, key: string) {
         for (const callback of this.callbacks) {
             callback.sendCallback(type, body, key)
         }
     }
 
-    enable(address: string | null | undefined): Callback {
+    enable (address: string | null | undefined): Callback {
         for (const callback of this.callbacks) {
             callback.enable(address)
         }
         return this
     }
 
-    register(callback: Callback) {
+    register (callback: Callback) {
         this.callbacks.push(callback)
     }
 }
 
-export async function initCallbackService(app: AppType, server: ServerType) {
+export async function initCallbackService (app: AppType, server: ServerType) {
     app.set('CallbackService', new MultiCallback())
     logger.info(`Using MultiCallback service`)
 }
 
-export default function getCallbackService(app: AppType): MultiCallback {
+export default function getCallbackService (app: AppType): MultiCallback {
     const CallbackService: MultiCallback = app.get('CallbackService')
     return CallbackService
 }

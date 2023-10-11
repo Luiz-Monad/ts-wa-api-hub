@@ -44,6 +44,7 @@ export interface ButtonTextType extends proto.Message.ButtonsMessage.Button.IBut
     displayText?: string | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ButtonType {
     export enum Type {
         UNKNOWN = 0,
@@ -68,6 +69,7 @@ export interface ButtonType extends proto.Message.ButtonsMessage.IButton {
     nativeFlowInfo?: any | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ButtonsMessageType {
     export enum HeaderType {
         UNKNOWN = 0,
@@ -117,6 +119,7 @@ export interface ContainedMessageType extends proto.Message.IFutureProofMessage 
     message?: proto.IMessage | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ListMessageType {
     export enum ListType {
         UNKNOWN = 0,
@@ -353,6 +356,7 @@ export interface DocumentMessageType extends proto.Message.IDocumentMessage {
     caption?: string | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ExtendedTextMessageType {
     export enum InviteLinkGroupType {
         DEFAULT = 0,
@@ -791,6 +795,7 @@ export interface KeyType extends proto.IMessageKey {
     participant?: string | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace MessageInfoType {
     /** Status enum. */
     export enum Status {

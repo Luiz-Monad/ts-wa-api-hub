@@ -29,7 +29,7 @@ const initAuthCreds = () => {
     }
 }
 
-export default async function useAuthState(app: AppType, key: string) {
+export default async function useAuthState (app: AppType, key: string) {
     const db = getDatabaseService(app)
     const table = db.table(`${key}-auth`)
     const writeData = async (data: any, id: string) => {

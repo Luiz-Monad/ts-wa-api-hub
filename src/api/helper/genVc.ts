@@ -4,7 +4,7 @@ export interface VCardData {
     phoneNumber: string
 }
 
-export default function generateVC(data: VCardData) {
+export default function generateVC (data: VCardData) {
     const result =
         'BEGIN:VCARD\n' +
         'VERSION:3.0\n' +

@@ -3,6 +3,7 @@ node_modules
 package-lock.json
 yarn.lock
 yarn-error.log
+.husky
 
 # APPLICATION
 .env
@@ -15,4 +16,3 @@ sessiondata
 # OUTPUT
 lib/*
 tmp/*
-

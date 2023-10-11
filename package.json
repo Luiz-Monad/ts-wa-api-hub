@@ -28,11 +28,11 @@
     },
     "lint-staged": {
         "*.ts": [
-            "prettier --write",
+            "prettierx --write",
             "git add"
         ],
         "*.{html,css,less,ejs}": [
-            "prettier --write",
+            "prettierx --write",
             "git add"
         ]
     },

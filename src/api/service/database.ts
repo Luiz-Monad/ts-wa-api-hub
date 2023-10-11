@@ -7,7 +7,7 @@ import getLogger from '../../config/logging'
 
 const logger = getLogger('database')
 
-export async function initDatabaseService(app: AppType) {
+export async function initDatabaseService (app: AppType) {
     let database: Database | null = null
 
     switch (config.database.kind) {
@@ -24,7 +24,7 @@ export async function initDatabaseService(app: AppType) {
     app.set('DatabaseService', database)
 }
 
-export default function getDatabaseService(app: AppType): Database {
+export default function getDatabaseService (app: AppType): Database {
     const DatabaseService: Database = app.get('DatabaseService')
     return DatabaseService
 }

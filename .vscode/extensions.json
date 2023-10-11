@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.vscode-typescript-next",
+        "mskelton.npm-outdated",
+        "ms-vscode.powershell",
+        "supperchong.pretty-json",
+        "redhat.vscode-yaml"
+    ]
+}

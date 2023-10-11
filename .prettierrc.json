@@ -3,5 +3,13 @@
     "tabWidth": 4,
     "printWidth": 90,
     "semi": false,
-    "singleQuote": true
+    "singleQuote": true,
+    "useTabs": false,
+    "arrowParens": "always",
+    "endOfLine": "lf",
+    "generatorStarSpacing": true,
+    "yieldStarSpacing": true,
+    "offsetTernaryExpressions": false,
+    "quoteProps": "consistent",
+    "spaceBeforeFunctionParen": true
 }

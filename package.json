@@ -12,8 +12,8 @@
         "watch": "concurrently \"yarn watch:tsc\" \"yarn sleep && yarn watch:node\"",
         "watch:tsc": "tsc --watch",
         "watch:node": "nodemon --inspect lib/server.js",
-        "format:check": "prettier --check .",
-        "format:write": "prettier --write .",
+        "format:check": "prettierx --check .",
+        "format:write": "prettierx --write .",
         "lint:check": "eslint .",
         "lint:fix": "eslint --fix .",
         "test": "jest",
@@ -27,7 +27,7 @@
         }
     },
     "lint-staged": {
-        "*.{js,jsx}": [
+        "*.ts": [
             "prettier --write",
             "git add"
         ],
@@ -79,12 +79,12 @@
         "concurrently": "^8.2.1",
         "copyfiles": "^2.4.1",
         "eslint": "^8.51.0",
-        "eslint-config-prettier": "^9.0.0",
+        "eslint-plugin-prettierx": "^0.18.0",
         "husky": "^8.0.3",
         "jest": "^29.7.0",
         "lint-staged": "^14.0.1",
         "nodemon": "^3.0.1",
-        "prettier": "^3.0.3",
+        "prettierx": "^0.19.0",
         "supertest": "^6.3.3",
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2"

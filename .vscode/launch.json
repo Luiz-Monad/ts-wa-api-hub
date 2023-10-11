@@ -7,9 +7,15 @@
         {
             "type": "node",
             "request": "attach",
-            "name": "Attach to debugger",
+            "name": "Debugger",
             "port": 9229,
             "preLaunchTask": "debug"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to debugger",
+            "port": 9229
         }
     ]
 }

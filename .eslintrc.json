@@ -2,13 +2,13 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "project": ["./tsconfig.json"]
-    },    
-    "plugins": ["@typescript-eslint"],
+        "project": ["./tsconfig.json", "./tests/tsconfig.json"]
+    },
+    "plugins": ["@typescript-eslint", "prettierx"],
     "extends": [
         "eslint:recommended",
-        "prettier",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettierx/default"
     ],
     "env": {
         "es2020": true,

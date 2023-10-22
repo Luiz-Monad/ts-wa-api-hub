@@ -1,4 +1,4 @@
-import pino from 'pino'
+import pino, { Logger } from 'pino'
 import pinoHttp from 'pino-http'
 import prettyPrint from 'pino-pretty'
 import config from './config'

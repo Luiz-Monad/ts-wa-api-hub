@@ -434,7 +434,7 @@ class WhatsAppInstance {
             }
         })
 
-        sock?.ws.on('CB:call', async (data) => {
+        sock?.ws.on('CB:call', async (data: any) => {
             this.logger.debug(data, 'CB:call')
             if (data.content) {
                 if (data.content.find((e: { tag: string }) => e.tag === 'offer')) {

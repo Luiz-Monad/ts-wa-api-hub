@@ -17,7 +17,7 @@ class MongoRecord<T extends Document> {
     }
 
     async save (): Promise<void> {
-        await this.collection.updateOne(this.record, this.record)
+        await this.collection.updateOne(this.record as any, this.record)
     }
 }
 
@@ -41,7 +41,7 @@ class MongoTable<T extends Document> extends Table<T> {
         options?: { upsert: boolean }
     ): Promise<void> {
         logger.debug({ indexer, record, options }, 'replace one')
-        await this.collection.replaceOne(indexer, record, options ?? {})
+        await this.collection.replaceOne(indexer as any, record, options ?? {})
     }
 
     async updateOne (
@@ -50,27 +50,27 @@ class MongoTable<T extends Document> extends Table<T> {
         options?: { upsert: boolean }
     ): Promise<void> {
         logger.debug({ indexer, record, options }, 'update one')
-        await this.collection.updateOne(indexer, record, options ?? {})
+        await this.collection.updateOne(indexer as any, record, options ?? {})
     }
 
     async deleteOne (indexer: Keyed<T>): Promise<void> {
         logger.debug({ indexer }, 'delete one')
-        await this.collection.deleteOne(indexer)
+        await this.collection.deleteOne(indexer as any)
     }
 
     async findOneAndDelete (indexer: Keyed<T>): Promise<Value<T> | null> {
         logger.debug({ indexer }, 'find and delete one')
-        return (await this.collection.findOneAndDelete(indexer)) as Value<T>
+        return (await this.collection.findOneAndDelete(indexer as any)) as any as Value<T>
     }
 
     async findOne (indexer: Keyed<T>): Promise<T | null> {
         logger.debug({ indexer }, 'find one')
-        return (await this.collection.findOne(indexer)) as T
+        return (await this.collection.findOne(indexer as any)) as T
     }
 
     async find (indexer: Keyed<T>): Promise<T[] | null> {
         logger.debug({ indexer }, 'find query')
-        return (await this.collection.find(indexer).toArray()).map((r) => r as T)
+        return (await this.collection.find(indexer as any).toArray()).map((r) => r as T)
     }
 
     async drop (): Promise<void> {

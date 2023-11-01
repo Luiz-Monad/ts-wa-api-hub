@@ -2,33 +2,18 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "typescript",
-            "tsconfig": "tsconfig.json",
-            "problemMatcher": ["$tsc"],
-            "group": "build",
-            "label": "tsc: build"
-        },
-        {
-            "type": "typescript",
-            "tsconfig": "tsconfig.json",
-            "option": "watch",
-            "problemMatcher": ["$tsc-watch"],
-            "group": "build",
-            "label": "tsc: watch"
-        },
-        {
             "type": "shell",
             "command": "yarn run start",
             "group": "build",
             "problemMatcher": ["$tsc"],
-            "label": "start"
+            "label": "script: start"
         },
         {
             "type": "shell",
             "command": "yarn run watch",
             "group": "build",
             "problemMatcher": ["$tsc-watch"],
-            "label": "watch",
+            "label": "script: watch",
             "isBackground": true
         },
         {
@@ -36,7 +21,7 @@
             "command": "yarn run debug",
             "group": "build",
             "problemMatcher": ["$tsc"],
-            "label": "debug",
+            "label": "script: debug",
             "isBackground": true
         },
         {
@@ -44,44 +29,43 @@
             "command": "yarn run build",
             "group": "build",
             "problemMatcher": ["$tsc"],
-            "label": "build"
+            "label": "script: build"
         },
         {
             "type": "shell",
             "command": "yarn run test",
             "group": "test",
-            "label": "test"
+            "label": "script: test"
         },
         {
             "type": "shell",
             "command": "yarn run test:watch",
             "group": "test",
-            "label": "test:watch"
+            "label": "script: test:watch"
         },
         {
             "type": "shell",
             "command": "yarn run lint:check",
             "group": "none",
-            "problemMatcher": ["$tsc"],
-            "label": "lint:check"
+            "label": "script: lint:check"
         },
         {
             "type": "shell",
             "command": "yarn run lint:fix",
             "group": "none",
-            "label": "lint:fix"
+            "label": "script: lint:fix"
         },
         {
             "type": "shell",
             "command": "yarn run format:check",
             "group": "build",
-            "label": "format:check"
+            "label": "script: format:check"
         },
         {
             "type": "shell",
             "command": "yarn run format:write",
             "group": "build",
-            "label": "format:write"
+            "label": "script: format:write"
         },
 
     ]

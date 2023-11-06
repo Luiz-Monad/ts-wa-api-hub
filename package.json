@@ -5,12 +5,11 @@
     "main": "server.js",
     "scripts": {
         "start": "yarn build && node lib/server.js",
-        "debug": "yarn build && node --inspect-brk lib/server.js",
-        "build": "yarn build:tsc && yarn build:ejs",
-        "build:tsc": "tsc",
+        "build": "yarn build:ts && yarn build:ejs",
+        "build:ts": "webpack --config webpack.config.js --progress",
         "build:ejs": "copyfiles -u 1 \"./src/api/views/**/*.ejs\" \"./lib\"",
-        "watch": "concurrently \"yarn watch:tsc\" \"yarn sleep && yarn watch:node\"",
-        "watch:tsc": "tsc --watch",
+        "watch": "concurrently \"yarn watch:ts\" \"yarn sleep && yarn watch:node\"",
+        "watch:ts": "webpack --config webpack.config.js --watch --progress",
         "watch:node": "nodemon --inspect lib/server.js",
         "format:check": "prettierx --check .",
         "format:write": "prettierx --write .",
@@ -85,8 +84,13 @@
         "lint-staged": "^15.0.2",
         "nodemon": "^3.0.1",
         "prettierx": "^0.19.0",
+        "rollup": "^4.3.0",
         "supertest": "^6.3.3",
         "ts-jest": "^29.1.1",
-        "typescript": "^5.2.2"
+        "ts-loader": "^9.5.0",
+        "typescript": "^5.2.2",
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-node-externals": "^3.0.0"
     }
 }

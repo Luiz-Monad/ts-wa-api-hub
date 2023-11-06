@@ -1,6 +1,3 @@
-import dotenv from 'dotenv'
-dotenv.config()
-
 import getLogger from './config/logging'
 const logger = getLogger('server')
 

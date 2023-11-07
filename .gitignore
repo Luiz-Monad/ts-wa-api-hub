@@ -10,9 +10,11 @@ yarn-error.log
 sessiondata
 
 # IDEs
+.vs/*
 .vscode/settings.json
 .idea
 
 # OUTPUT
 lib/*
 tmp/*
+obj/*

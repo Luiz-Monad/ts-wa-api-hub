@@ -3,14 +3,14 @@
     "tasks": [
         {
             "type": "shell",
-            "command": "yarn run start",
+            "command": "npm run start",
             "group": "build",
             "problemMatcher": ["$tsc"],
             "label": "script: start"
         },
         {
             "type": "shell",
-            "command": "yarn run watch",
+            "command": "npm run watch",
             "group": "build",
             "problemMatcher": ["$tsc-watch"],
             "label": "script: watch",
@@ -18,7 +18,7 @@
         },
         {
             "type": "shell",
-            "command": "yarn run debug",
+            "command": "npm run debug",
             "group": "build",
             "problemMatcher": ["$tsc"],
             "label": "script: debug",
@@ -26,44 +26,44 @@
         },
         {
             "type": "shell",
-            "command": "yarn run build",
+            "command": "npm run build",
             "group": "build",
             "problemMatcher": ["$tsc"],
             "label": "script: build"
         },
         {
             "type": "shell",
-            "command": "yarn run test",
+            "command": "npm run test",
             "group": "test",
             "label": "script: test"
         },
         {
             "type": "shell",
-            "command": "yarn run test:watch",
+            "command": "npm run test:watch",
             "group": "test",
             "label": "script: test:watch"
         },
         {
             "type": "shell",
-            "command": "yarn run lint:check",
+            "command": "npm run lint:check",
             "group": "none",
             "label": "script: lint:check"
         },
         {
             "type": "shell",
-            "command": "yarn run lint:fix",
+            "command": "npm run lint:fix",
             "group": "none",
             "label": "script: lint:fix"
         },
         {
             "type": "shell",
-            "command": "yarn run format:check",
+            "command": "npm run format:check",
             "group": "build",
             "label": "script: format:check"
         },
         {
             "type": "shell",
-            "command": "yarn run format:write",
+            "command": "npm run format:write",
             "group": "build",
             "label": "script: format:write"
         },

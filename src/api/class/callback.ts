@@ -18,6 +18,8 @@ const callBackFilters = {
 
 export type CallBackType = keyof typeof callBackFilters
 
+export type CallBackBody = string | object
+
 export class Callback {
     serviceName: string = ''
     enabled: boolean = false
@@ -37,7 +39,7 @@ export class Callback {
         this.filterList = filters?.split(',') || ['all']
     }
 
-    async sendCallback (type: CallBackType, body: any, key: string) {
+    async sendCallback (type: CallBackType, body: CallBackBody, key: string) {
         if (!this.enabled) return
         if (callBackFilters[type].some((e) => this.filterList.includes(e))) {
             const cb = type.split(':')[0]
@@ -45,7 +47,7 @@ export class Callback {
         }
     }
 
-    async coreSendCallback (type: string, body: any, key: string) {
+    async coreSendCallback (type: string, body: CallBackBody, key: string) {
         throw new Error('Method not implemented.')
     }
 

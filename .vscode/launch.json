@@ -6,7 +6,7 @@
     "configurations": [
         {
             "type": "node",
-            
+
             "request": "attach",
             "name": "Debugger",
             "port": 9229,

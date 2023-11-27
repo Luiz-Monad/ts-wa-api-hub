@@ -133,13 +133,13 @@ export function getWaQrLogger () {
 }
 
 function getWaPinoLogger (name: string, instanceId: string): WaLogger {
-    return pino(
+    return (pino(
         {
             name: `${name}/${instanceId}`,
             level: config.log.waLevel,
         },
         getStream()
-    ) as unknown as WaLogger
+    ) as unknown) as WaLogger
 }
 
 export default function getLogger (name: string, instanceId?: string) {

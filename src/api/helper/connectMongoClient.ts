@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient, Document, WithoutId } from 'mongodb'
+import { Collection, Db, MongoClient, Document, Filter, WithId, WithoutId } from 'mongodb'
 import { AppType } from './types'
 import config from '../../config/config'
 import Database, { Keyed, Record, Table, Value } from '../models/db.model'
@@ -6,6 +6,25 @@ import Chat from '../models/chat.model'
 import getLogger from '../../config/logging'
 
 const logger = getLogger('database')
+
+function toFilter<T extends Document> (index: Keyed<T>): Filter<T> {
+    const { _id, key, ...extra } = index
+    return { _id, key, ...extra }
+}
+
+function toBoxed<T> (obj: WithId<T> | null): Value<T> | null {
+    if (obj === null) return null
+    return { value: toUnboxed(obj) }
+}
+
+function toUnboxedOrNull<T> (obj: WithId<T> | null): T | null {
+    if (obj === null) return null
+    return toUnboxed(obj)
+}
+
+function toUnboxed<T> (obj: WithId<T>): T {
+    return obj as T
+}
 
 class MongoRecord<T extends Document> {
     collection: Collection<T>
@@ -17,7 +36,7 @@ class MongoRecord<T extends Document> {
     }
 
     async save (): Promise<void> {
-        await this.collection.updateOne(this.record as any, this.record)
+        await this.collection.updateOne(toFilter(this.record), this.record)
     }
 }
 
@@ -41,7 +60,7 @@ class MongoTable<T extends Document> extends Table<T> {
         options?: { upsert: boolean }
     ): Promise<void> {
         logger.debug({ indexer, record, options }, 'replace one')
-        await this.collection.replaceOne(indexer as any, record, options ?? {})
+        await this.collection.replaceOne(toFilter(indexer), record, options ?? {})
     }
 
     async updateOne (
@@ -50,27 +69,27 @@ class MongoTable<T extends Document> extends Table<T> {
         options?: { upsert: boolean }
     ): Promise<void> {
         logger.debug({ indexer, record, options }, 'update one')
-        await this.collection.updateOne(indexer as any, record, options ?? {})
+        await this.collection.updateOne(toFilter(indexer), record, options ?? {})
     }
 
     async deleteOne (indexer: Keyed<T>): Promise<void> {
         logger.debug({ indexer }, 'delete one')
-        await this.collection.deleteOne(indexer as any)
+        await this.collection.deleteOne(toFilter(indexer))
     }
 
     async findOneAndDelete (indexer: Keyed<T>): Promise<Value<T> | null> {
         logger.debug({ indexer }, 'find and delete one')
-        return (await this.collection.findOneAndDelete(indexer as any)) as any as Value<T>
+        return toBoxed(await this.collection.findOneAndDelete(toFilter(indexer)))
     }
 
     async findOne (indexer: Keyed<T>): Promise<T | null> {
         logger.debug({ indexer }, 'find one')
-        return (await this.collection.findOne(indexer as any)) as T
+        return toUnboxedOrNull(await this.collection.findOne(toFilter(indexer)))
     }
 
     async find (indexer: Keyed<T>): Promise<T[] | null> {
         logger.debug({ indexer }, 'find query')
-        return (await this.collection.find(indexer as any).toArray()).map((r) => r as T)
+        return (await this.collection.find(toFilter(indexer)).toArray()).map(toUnboxed)
     }
 
     async drop (): Promise<void> {
@@ -89,7 +108,7 @@ class MongoDatabase extends Database {
         this.Chat = this.table('Chat')
     }
 
-    async listTable (): Promise<Table<any>[]> {
+    async listTable<T> (): Promise<Table<T>[]> {
         const collections = await this.db.listCollections().toArray()
         return collections.filter((c) => c.name !== 'Chat').map((c) => this.table(c.name))
     }

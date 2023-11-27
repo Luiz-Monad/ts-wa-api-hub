@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 
@@ -67,7 +66,7 @@ export class Table<T> {
 }
 
 export default class Database {
-    listTable (): Promise<Table<any>[]> {
+    listTable<T> (): Promise<Table<T>[]> {
         throw new Error('Method not implemented.')
     }
 

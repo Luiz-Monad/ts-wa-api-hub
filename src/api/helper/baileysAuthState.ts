@@ -10,6 +10,9 @@ import { AppType, TypeOfPromise } from './types'
 import getDatabaseService from '../service/database'
 import getLogger from '../../config/logging'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SignalKeyStoreType = any
+
 const logger = getLogger('auth')
 
 const initAuthCreds = () => {
@@ -32,7 +35,7 @@ const initAuthCreds = () => {
 export default async function useAuthState (app: AppType, key: string) {
     const db = getDatabaseService(app)
     const table = db.table(`${key}-auth`)
-    const writeData = async (data: any, id: string) => {
+    const writeData = async (data: unknown, id: string) => {
         try {
             return await table.replaceOne(
                 { _id: id },
@@ -75,7 +78,7 @@ export default async function useAuthState (app: AppType, key: string) {
             creds,
             keys: {
                 get: async (type: string, ids: string[]) => {
-                    const data: Record<string, any> = {}
+                    const data: Record<string, SignalKeyStoreType> = {}
                     await Promise.all(
                         ids.map(async (id) => {
                             let value = await readData(`${type}-${id}`)
@@ -87,7 +90,7 @@ export default async function useAuthState (app: AppType, key: string) {
                     )
                     return data
                 },
-                set: async (data: Record<string, any>) => {
+                set: async (data: Record<string, SignalKeyStoreType>) => {
                     const tasks = []
                     for (const category of Object.keys(data)) {
                         for (const id of Object.keys(data[category])) {

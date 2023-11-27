@@ -1,7 +1,6 @@
 import { AppType, ServerType } from '../helper/types'
-import config from '../../config/config'
 import getLogger from '../../config/logging'
-import { CallBackType, Callback } from '../class/callback'
+import { CallBackBody, CallBackType, Callback } from '../class/callback'
 
 const logger = getLogger('callback')
 
@@ -12,7 +11,7 @@ export class MultiCallback extends Callback {
         super('MultiCallback', true, '*', null)
     }
 
-    async sendCallback (type: CallBackType, body: any, key: string) {
+    async sendCallback (type: CallBackType, body: CallBackBody, key: string) {
         for (const callback of this.callbacks) {
             callback.sendCallback(type, body, key)
         }

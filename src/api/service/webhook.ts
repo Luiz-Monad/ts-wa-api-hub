@@ -2,7 +2,7 @@ import { AppType, ServerType } from '../helper/types'
 import axios, { AxiosInstance } from 'axios'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
-import { Callback } from '../class/callback'
+import { CallBackBody, Callback } from '../class/callback'
 import getCallbackService from './callback'
 
 const logger = getLogger('webhook')
@@ -14,7 +14,7 @@ export class WebHook extends Callback {
         super('WebHook', enabled, address, filters)
     }
 
-    async coreSendCallback (type: string, body: any, key: string) {
+    async coreSendCallback (type: string, body: CallBackBody, key: string) {
         if (!this.axiosInstance && this.address) {
             this.axiosInstance = axios.create({
                 baseURL: this.address,

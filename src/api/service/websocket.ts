@@ -2,7 +2,7 @@ import { AppType, ServerType } from '../helper/types'
 import { Server } from 'socket.io'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
-import { Callback } from '../class/callback'
+import { CallBackBody, Callback } from '../class/callback'
 import getCallbackService from './callback'
 
 const logger = getLogger('websocket')
@@ -16,12 +16,12 @@ export class WebSocket extends Callback {
         this.appServer = appServer
     }
 
-    async coreSendCallback (type: string, body: any, key: string) {
+    async coreSendCallback (type: string, body: CallBackBody, key: string) {
         if (!this.io) {
             this.io = new Server(this.appServer)
         }
         this.io.emit(type, {
-            ...body,
+            ...(typeof body === 'string' ? { value: body } : body),
             instanceKey: key,
         })
     }

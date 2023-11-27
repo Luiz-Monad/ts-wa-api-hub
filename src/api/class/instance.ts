@@ -14,9 +14,10 @@ import processButton, { ButtonDef } from '../helper/processbtn'
 import processMessage, { MediaType } from '../helper/processmessage'
 import { AppType, FileType } from '../helper/types'
 import getCallbackService from '../service/callback'
-import { CallBackType, Callback } from './callback'
+import { CallBackBody, CallBackType, Callback } from './callback'
 import { Boom } from '@hapi/boom'
 import {
+    BaileysEventMap,
     DisconnectReason,
     makeCacheableSignalKeyStore,
     default as makeWASocket,
@@ -46,7 +47,7 @@ export interface ButtonMessage {
 
 export interface ListMessage {
     text: string
-    sections?: any
+    sections?: Section[]
     buttonText?: string
     description?: string
     title?: string
@@ -66,6 +67,17 @@ export interface MessageKey {
     fromMe?: boolean | null
     id?: string | null
     participant?: string | null
+}
+
+export interface Section {
+    title?: string
+    rows?: Row[]
+}
+
+export interface Row {
+    title?: string
+    description?: string
+    rowId?: string
 }
 
 class WhatsAppInstance {
@@ -106,7 +118,7 @@ class WhatsAppInstance {
             this.callbackInstance = this.callbackInstance.enable(callbackAddress)
     }
 
-    async _sendCallback (type: CallBackType, body: any, key: string) {
+    async _sendCallback (type: CallBackType, body: CallBackBody, key: string) {
         this.logger.debug(body, `callback: ${type}`)
         this.callbackInstance?.sendCallback(type, body, key)
     }
@@ -257,7 +269,9 @@ class WhatsAppInstance {
                             this.sock?.ws.close()
                             // remove all events
                             baileysEvents.forEach((ev) =>
-                                this.sock?.ev.removeAllListeners(<any>ev)
+                                this.sock?.ev.removeAllListeners(
+                                    ev as keyof BaileysEventMap
+                                )
                             )
                             // terminated
                             this.instance.qr = ' '
@@ -438,6 +452,7 @@ class WhatsAppInstance {
             }
         })
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sock?.ws.on('CB:call', async (data: any) => {
             this.logger.debug(data, 'CB:call')
             if (data.content) {

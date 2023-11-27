@@ -53,12 +53,13 @@ class FsTable<T> extends Table<T> {
         try {
             const data = await readFile(this.filePath, 'utf-8')
             return JSON.parse(data)
-        } catch (err: any) {
+        } catch (err) {
+            const nErr = err as NodeJS.ErrnoException
             // If file doesn't exist yet, return an empty array
-            if (err.code === 'ENOENT') {
+            if (nErr.code === 'ENOENT') {
                 return []
             }
-            throw err
+            throw nErr
         }
     }
 
@@ -207,7 +208,7 @@ class FsDatabase extends Database {
         this.Chat = this.table('Chat')
     }
 
-    async listTable (): Promise<Table<any>[]> {
+    async listTable<T> (): Promise<Table<T>[]> {
         const fileNames = await readdir(this.directory)
         return fileNames
             .filter((name) => name !== 'Chat.json' && name.endsWith('.json'))

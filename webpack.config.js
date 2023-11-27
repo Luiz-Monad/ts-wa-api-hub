@@ -1,10 +1,10 @@
 const path = require('path')
-const nodeExternals = require('webpack-node-externals');
+const nodeExternals = require('webpack-node-externals')
 
 module.exports = {
     mode: 'development',
     entry: {
-        'server': './src/server.ts',
+        server: './src/server.ts',
     },
     output: {
         path: path.resolve(__dirname, './lib/'),

@@ -1,5 +1,9 @@
 import config from '../../config/config'
-import getLogger, { getWaCacheLogger, getWaLogger } from '../../config/logging'
+import getLogger, {
+    getWaCacheLogger,
+    getWaLogger,
+    getWaQrLogger,
+} from '../../config/logging'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
 import useChatState, { ChatState } from '../helper/chatState'
 import downloadMessage from '../helper/downloadMsg'
@@ -69,7 +73,6 @@ class WhatsAppInstance {
     socketConfig = {
         connectTimeoutMs: 2 * 60 * 1000,
         defaultQueryTimeoutMs: 20 * 1000,
-        printQRInTerminal: true,
     }
     key: string
     logger: ReturnType<typeof getLogger>
@@ -123,6 +126,7 @@ class WhatsAppInstance {
                 },
                 browser: <[string, string, string]>Object.values(config.browser),
                 logger: getWaLogger(this.key),
+                printQRInTerminal: getWaQrLogger(),
                 ...this.socketConfig,
             }
             this.sock = makeWASocket(socketConfig)

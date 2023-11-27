@@ -14,7 +14,7 @@
         "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true,
         "sourceMap": true,
-        "lib": ["ES2016"]
+        "lib": ["ES2020", "DOM"]
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
     "exclude": ["node_modules/**"]

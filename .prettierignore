@@ -3,5 +3,4 @@ node_modules/*
 lib/*
 src/api/routes/group.route.ts
 src/api/routes/misc.route.ts
-src/config/config.ts
 azure-pipelines.yml

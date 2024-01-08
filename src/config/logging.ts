@@ -128,7 +128,7 @@ export function getWaCacheLogger (instanceId: string) {
     return getWaPinoLogger('cache', instanceId)
 }
 
-export function getWaQrLogger () {
+export function isWaQrLoggerDebug () {
     return config.log.waLevel === 'debug'
 }
 

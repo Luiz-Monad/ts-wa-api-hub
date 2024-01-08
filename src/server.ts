@@ -28,7 +28,7 @@ server.listen(config.port, async () => {
 })
 
 const unexpectedErrorHandler: ErrHandler = (error) => {
-    logger.error(error)
+    logger.error(error, 'UNHANDLED')
 }
 
 process.on('uncaughtException', unexpectedErrorHandler)

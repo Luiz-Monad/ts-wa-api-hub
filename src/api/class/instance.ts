@@ -2,7 +2,7 @@ import config from '../../config/config'
 import getLogger, {
     getWaCacheLogger,
     getWaLogger,
-    getWaQrLogger,
+    isWaQrLoggerDebug,
 } from '../../config/logging'
 import useAuthState, { AuthState } from '../helper/baileysAuthState'
 import useChatState, { ChatState } from '../helper/chatState'
@@ -138,7 +138,7 @@ class WhatsAppInstance {
                 },
                 browser: <[string, string, string]>Object.values(config.browser),
                 logger: getWaLogger(this.key),
-                printQRInTerminal: getWaQrLogger(),
+                printQRInTerminal: isWaQrLoggerDebug(),
                 ...this.socketConfig,
             }
             this.sock = makeWASocket(socketConfig)

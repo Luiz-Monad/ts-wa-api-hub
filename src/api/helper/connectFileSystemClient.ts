@@ -228,8 +228,8 @@ export default async function connectFileSystemClient (app: AppType) {
         await mkdir(path, { recursive: true })
         logger.info('STATE: Successfully connected to file system')
         return new FsDatabase(path, options)
-    } catch (error) {
-        logger.error('STATE: Connection to file system failed!', error)
+    } catch (err) {
+        logger.error(err, 'STATE: Connection to file system failed!')
         process.exit()
     }
 }

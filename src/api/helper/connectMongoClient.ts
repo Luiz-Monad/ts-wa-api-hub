@@ -128,8 +128,8 @@ export default async function connectMongoClient (app: AppType) {
         await mongoClient.connect()
         logger.info('STATE: Successfully connected to MongoDB')
         return new MongoDatabase(mongoClient)
-    } catch (error) {
-        logger.error('STATE: Connection to MongoDB failed!', error)
+    } catch (err) {
+        logger.error(err, 'STATE: Connection to MongoDB failed!')
         process.exit()
     }
 }

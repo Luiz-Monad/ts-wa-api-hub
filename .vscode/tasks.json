@@ -18,14 +18,6 @@
         },
         {
             "type": "shell",
-            "command": "npm run debug",
-            "group": "build",
-            "problemMatcher": ["$tsc"],
-            "label": "script: debug",
-            "isBackground": true
-        },
-        {
-            "type": "shell",
             "command": "npm run build",
             "group": "build",
             "problemMatcher": ["$tsc"],

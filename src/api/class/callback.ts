@@ -51,7 +51,7 @@ export class Callback {
         throw new Error('Method not implemented.')
     }
 
-    enable (address: string | null | undefined): Callback {
+    enable (address?: string | null): Callback {
         const addr = address ?? this.address
         return this.coreEnable(addr)
     }

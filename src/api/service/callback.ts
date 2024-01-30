@@ -17,7 +17,7 @@ export class MultiCallback extends Callback {
         }
     }
 
-    enable (address: string | null | undefined): Callback {
+    enable (address?: string | null): Callback {
         for (const callback of this.callbacks) {
             callback.enable(address)
         }

@@ -87,6 +87,7 @@ class WhatsAppInstance {
         defaultQueryTimeoutMs: 20 * 1000,
     }
     key: string
+    mobile: boolean
     logger: ReturnType<typeof getLogger>
     authState: AuthState | null = null
     chatState: ChatState | null = null
@@ -107,11 +108,13 @@ class WhatsAppInstance {
     constructor (
         app: AppType,
         key?: string,
+        mobile?: boolean,
         allowCallback?: boolean,
         callbackAddress?: string | null
     ) {
         this.app = app
         this.key = key ? key : uuidv4()
+        this.mobile = !!mobile
         this.logger = getLogger('instance', this.key)
         this.callbackInstance = getCallbackService(this.app)
         if (allowCallback)
@@ -136,6 +139,7 @@ class WhatsAppInstance {
                         getWaCacheLogger(this.key)
                     ),
                 },
+                mobile: this.mobile,
                 browser: <[string, string, string]>Object.values(config.browser),
                 logger: getWaLogger(this.key),
                 printQRInTerminal: isWaQrLoggerDebug(),
@@ -567,6 +571,7 @@ class WhatsAppInstance {
     async getInstanceDetail (key: string) {
         return {
             instance_key: key,
+            instance_type: this.mobile ? 'mobile' : 'web',
             phone_connected: this.instance?.online,
             callbackEnabled: this.callbackInstance?.enabled,
             callbackUrl: this.callbackInstance?.address,

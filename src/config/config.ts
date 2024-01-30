@@ -1,9 +1,8 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
-const isEnabled = (envVar: string | undefined) => !!(envVar && envVar === 'true')
-const isNumber = (envVar: string | undefined) =>
-    (envVar && Number.parseInt(envVar)) || null
+const isEnabled = (envVar?: string) => !!(envVar && envVar === 'true')
+const isNumber = (envVar?: string) => (envVar && Number.parseInt(envVar)) || null
 
 // ==================================
 // SECURITY CONFIGURATION

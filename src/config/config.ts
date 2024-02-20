@@ -57,8 +57,6 @@ const AZURETABLE_URL = process.env.AZURETABLE_URL || default_AZURETABLE_URL
 
 // MONGODB CONFIGURATION
 // ----------------------------------
-// Enable or disable Mongo DB
-const MONGODB_ENABLED = isEnabled(process.env.MONGODB_ENABLED)
 // URL of the Mongo DB
 const default_MONGODB_URL = 'mongodb://127.0.0.1:27017/WhatsAppInstance'
 const MONGODB_URL = process.env.MONGODB_URL || default_MONGODB_URL

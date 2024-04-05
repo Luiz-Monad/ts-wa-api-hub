@@ -15,6 +15,7 @@ export namespace ChatParticipantType {
     }
 }
 
+/** Properties of a GroupParticipant. */
 export interface ChatParticipantType extends proto.IGroupParticipant {
     /** GroupParticipant userJid */
     userJid: string
@@ -23,6 +24,7 @@ export interface ChatParticipantType extends proto.IGroupParticipant {
     rank?: ChatParticipantType.Rank | null
 }
 
+/** Properties of a HistorySyncMsg. */
 export interface ChatMessageType extends proto.IHistorySyncMsg {
     /** HistorySyncMsg message */
     message?: MessageInfoType | null
@@ -31,6 +33,17 @@ export interface ChatMessageType extends proto.IHistorySyncMsg {
     msgOrderId?: number | Long | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ChatType {
+    /** EndOfHistoryTransferType enum. */
+    export enum EndOfHistoryTransferType {
+        COMPLETE_BUT_MORE_MESSAGES_REMAIN_ON_PRIMARY = 0,
+        COMPLETE_AND_NO_MORE_MESSAGE_REMAIN_ON_PRIMARY = 1,
+        COMPLETE_ON_DEMAND_SYNC_BUT_MORE_MSG_REMAIN_ON_PRIMARY = 2,
+    }
+}
+
+/** Properties of a Conversation. */
 export default interface ChatType extends proto.IConversation {
     /** data store key */
     _id: string
@@ -77,7 +90,7 @@ export default interface ChatType extends proto.IConversation {
     ephemeralSettingTimestamp?: number | Long | null
 
     /** Conversation endOfHistoryTransferType */
-    endOfHistoryTransferType?: number | null
+    endOfHistoryTransferType?: ChatType.EndOfHistoryTransferType | null
 
     /** Conversation conversationTimestamp */
     conversationTimestamp?: number | Long | null
@@ -171,4 +184,13 @@ export default interface ChatType extends proto.IConversation {
 
     /** Conversation lidJid */
     lidJid?: string | null
+
+    /** Conversation username */
+    username?: string | null
+
+    /** Conversation lidOriginType */
+    lidOriginType?: string | null
+
+    /** Conversation commentsCount */
+    commentsCount?: number | null
 }

@@ -4,6 +4,7 @@ import { proto } from '@whiskeysockets/baileys/WAProto'
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 
+/** Properties of a UserReceipt. */
 export interface ReceiptType extends proto.IUserReceipt {
     /** UserReceipt userJid */
     userJid: string
@@ -24,6 +25,59 @@ export interface ReceiptType extends proto.IUserReceipt {
     deliveredDeviceJid?: string[] | null
 }
 
+/** Properties of an ExtendedTextMessageWithParentKey. */
+export interface ExtendedTextParentMessageType
+    extends proto.Message.IExtendedTextMessageWithParentKey {
+    /** ExtendedTextMessageWithParentKey key */
+    key?: KeyType | null
+
+    /** ExtendedTextMessageWithParentKey extendedTextMessage */
+    extendedTextMessage?: ExtendedTextMessageType | null
+}
+
+/** Properties of a CommentMessage. */
+export interface CommentMessageType extends proto.Message.ICommentMessage {
+    /** CommentMessage message */
+    message?: MessageType | null
+
+    /** CommentMessage targetMessageKey */
+    targetMessageKey?: KeyType | null
+}
+
+/** Properties of an EventMessage. */
+export interface EventMessageType extends proto.Message.IEventMessage {
+    /** EventMessage contextInfo */
+    contextInfo?: proto.IContextInfo | null
+
+    /** EventMessage isCanceled */
+    isCanceled?: boolean | null
+
+    /** EventMessage name */
+    name?: string | null
+
+    /** EventMessage description */
+    description?: string | null
+
+    /** EventMessage location */
+    location?: LocationMessageType | null
+
+    /** EventMessage joinLink */
+    joinLink?: string | null
+
+    /** EventMessage startTime */
+    startTime?: number | Long | null
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ButtonsResponseMessageType {
+    /** Type enum. */
+    export enum Type {
+        UNKNOWN = 0,
+        DISPLAY_TEXT = 1,
+    }
+}
+
+/** Properties of a ButtonsResponseMessage. */
 export interface ButtonsResponseMessageType
     extends proto.Message.IButtonsResponseMessage {
     /** ButtonsResponseMessage selectedButtonId */
@@ -33,44 +87,15 @@ export interface ButtonsResponseMessageType
     contextInfo?: any | null
 
     /** ButtonsResponseMessage type */
-    type?: number | null
+    type?: ButtonsResponseMessageType.Type | null
 
     /** ButtonsResponseMessage selectedDisplayText */
     selectedDisplayText?: string | null
 }
 
-export interface ButtonTextType extends proto.Message.ButtonsMessage.Button.IButtonText {
-    /** ButtonText displayText */
-    displayText?: string | null
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace ButtonType {
-    export enum Type {
-        UNKNOWN = 0,
-        RESPONSE = 1,
-        NATIVE_FLOW = 2,
-    }
-}
-
-export interface ButtonType extends proto.Message.ButtonsMessage.IButton {
-    /*********** Inherited ***********/
-
-    /** Button buttonId */
-    buttonId?: string | null
-
-    /** Button buttonText */
-    buttonText?: ButtonTextType | null
-
-    /** Button type */
-    type?: ButtonType.Type | null
-
-    /** Button nativeFlowInfo */
-    nativeFlowInfo?: any | null
-}
-
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ButtonsMessageType {
+    /** HeaderType enum. */
     export enum HeaderType {
         UNKNOWN = 0,
         EMPTY = 1,
@@ -80,8 +105,41 @@ export namespace ButtonsMessageType {
         VIDEO = 5,
         LOCATION = 6,
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    export namespace Button {
+        /** Type enum. */
+        export enum Type {
+            UNKNOWN = 0,
+            RESPONSE = 1,
+            NATIVE_FLOW = 2,
+        }
+
+        /** Properties of a ButtonText. */
+        export interface ButtonText
+            extends proto.Message.ButtonsMessage.Button.IButtonText {
+            /** ButtonText displayText */
+            displayText?: string | null
+        }
+    }
+
+    /** Properties of a Button. */
+    export interface Button extends proto.Message.ButtonsMessage.IButton {
+        /** Button buttonId */
+        buttonId?: string | null
+
+        /** Button buttonText */
+        buttonText?: Button.ButtonText | null
+
+        /** Button type */
+        type?: Button.Type | null
+
+        /** Button nativeFlowInfo */
+        nativeFlowInfo?: any | null
+    }
 }
 
+/** Properties of a ButtonsMessage. */
 export interface ButtonsMessageType extends proto.Message.IButtonsMessage {
     /** ButtonsMessage contentText */
     contentText?: string | null
@@ -93,7 +151,7 @@ export interface ButtonsMessageType extends proto.Message.IButtonsMessage {
     contextInfo?: any | null
 
     /** ButtonsMessage buttons */
-    buttons?: ButtonType[] | null
+    buttons?: ButtonsMessageType.Button[] | null
 
     /** ButtonsMessage headerType */
     headerType?: ButtonsMessageType.HeaderType | null
@@ -114,13 +172,107 @@ export interface ButtonsMessageType extends proto.Message.IButtonsMessage {
     locationMessage?: LocationMessageType | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ListResponseMessageType {
+    /** Properties of a SingleSelectReply. */
+    export interface SingleSelectReply
+        extends proto.Message.ListResponseMessage.ISingleSelectReply {
+        /** SingleSelectReply selectedRowId */
+        selectedRowId?: string | null
+    }
+
+    /** ListType enum. */
+    export enum ListType {
+        UNKNOWN = 0,
+        SINGLE_SELECT = 1,
+    }
+}
+
+/** Properties of a ListResponseMessage. */
+export interface ListResponseMessageType extends proto.Message.IListResponseMessage {
+    /** ListResponseMessage title */
+    title?: string | null
+
+    /** ListResponseMessage listType */
+    listType?: ListResponseMessageType.ListType | null
+
+    /** ListResponseMessage singleSelectReply */
+    singleSelectReply?: ListResponseMessageType.SingleSelectReply | null
+
+    /** ListResponseMessage contextInfo */
+    contextInfo?: any | null
+
+    /** ListResponseMessage description */
+    description?: string | null
+}
+
+/** Properties of a FutureProofMessage. */
 export interface ContainedMessageType extends proto.Message.IFutureProofMessage {
     /** FutureProofMessage message */
-    message?: proto.IMessage | null
+    message?: MessageType | null
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ListMessageType {
+    /** Properties of a ProductListHeaderImage. */
+    export interface ProductListHeaderImage
+        extends proto.Message.ListMessage.IProductListHeaderImage {
+        /** ProductListHeaderImage productId */
+        productId?: string | null
+
+        /** ProductListHeaderImage jpegThumbnail */
+        jpegThumbnail?: Uint8Array | null
+    }
+
+    /** Properties of a Product. */
+    export interface Product extends proto.Message.ListMessage.IProduct {
+        /** Product productId */
+        productId?: string | null
+    }
+
+    /** Properties of a ProductSection. */
+    export interface ProductSection extends proto.Message.ListMessage.IProductSection {
+        /** ProductSection title */
+        title?: string | null
+
+        /** ProductSection products */
+        products?: Product[] | null
+    }
+
+    /** Properties of a ProductListInfo. */
+    export interface ProductListInfo extends proto.Message.ListMessage.IProductListInfo {
+        /** ProductListInfo productSections */
+        productSections?: ProductSection[] | null
+
+        /** ProductListInfo headerImage */
+        headerImage?: ProductListHeaderImage | null
+
+        /** ProductListInfo businessOwnerJid */
+        businessOwnerJid?: string | null
+    }
+
+    /** Properties of a Row. */
+    export interface Row extends proto.Message.ListMessage.IRow {
+        /** Row title */
+        title?: string | null
+
+        /** Row description */
+        description?: string | null
+
+        /** Row rowId */
+        rowId?: string | null
+    }
+
+    /** Properties of a Section. */
+    export interface Section extends proto.Message.ListMessage.ISection {
+        /** Section title */
+        title?: string | null
+
+        /** Section rows */
+        rows?: Row[] | null
+    }
+
+    /** ListType enum. */
     export enum ListType {
         UNKNOWN = 0,
         SINGLE_SELECT = 1,
@@ -128,6 +280,7 @@ export namespace ListMessageType {
     }
 }
 
+/** Properties of a ListMessage. */
 export interface ListMessageType extends proto.Message.IListMessage {
     /** ListMessage title */
     title?: string | null
@@ -142,10 +295,10 @@ export interface ListMessageType extends proto.Message.IListMessage {
     listType?: ListMessageType.ListType | null
 
     /** ListMessage sections */
-    sections?: any[] | null
+    sections?: ListMessageType.Section[] | null
 
     /** ListMessage productListInfo */
-    productListInfo?: any | null
+    productListInfo?: ListMessageType.ProductListInfo | null
 
     /** ListMessage footerText */
     footerText?: string | null
@@ -154,7 +307,9 @@ export interface ListMessageType extends proto.Message.IListMessage {
     contextInfo?: any | null
 }
 
-export interface TemplateMessageType extends proto.Message.ITemplateButtonReplyMessage {
+/** Properties of a TemplateButtonReplyMessage. */
+export interface TemplateButtonMessageType
+    extends proto.Message.ITemplateButtonReplyMessage {
     /** TemplateButtonReplyMessage selectedId */
     selectedId?: string | null
 
@@ -166,9 +321,274 @@ export interface TemplateMessageType extends proto.Message.ITemplateButtonReplyM
 
     /** TemplateButtonReplyMessage selectedIndex */
     selectedIndex?: number | null
+
+    /** TemplateButtonReplyMessage selectedCarouselCardIndex */
+    selectedCarouselCardIndex?: number | null
 }
 
-export interface MessageChatType extends proto.Message.IChat {
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace TemplateButtonType {
+    /** Properties of a CallButton. */
+    export interface CallButton extends proto.TemplateButton.ICallButton {
+        /** CallButton displayText */
+        displayText?: HighlyStructuredMessageType | null
+
+        /** CallButton phoneNumber */
+        phoneNumber?: HighlyStructuredMessageType | null
+    }
+
+    /** Properties of a URLButton. */
+    export interface URLButton extends proto.TemplateButton.IURLButton {
+        /** URLButton displayText */
+        displayText?: HighlyStructuredMessageType | null
+
+        /** URLButton url */
+        url?: HighlyStructuredMessageType | null
+    }
+
+    /** Properties of a QuickReplyButton. */
+    export interface QuickReplyButton extends proto.TemplateButton.IQuickReplyButton {
+        /** QuickReplyButton displayText */
+        displayText?: HighlyStructuredMessageType | null
+
+        /** QuickReplyButton id */
+        id?: string | null
+    }
+}
+
+/** Properties of a TemplateButton. */
+interface TemplateButtonType extends proto.ITemplateButton {
+    /** TemplateButton index */
+    index?: number | null
+
+    /** TemplateButton quickReplyButton */
+    quickReplyButton?: TemplateButtonType.QuickReplyButton | null
+
+    /** TemplateButton urlButton */
+    urlButton?: TemplateButtonType.URLButton | null
+
+    /** TemplateButton callButton */
+    callButton?: TemplateButtonType.CallButton | null
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace HydratedTemplateButtonType {
+    /** Properties of a HydratedCallButton. */
+    export interface HydratedCallButton
+        extends proto.HydratedTemplateButton.IHydratedCallButton {
+        /** HydratedCallButton displayText */
+        displayText?: string | null
+
+        /** HydratedCallButton phoneNumber */
+        phoneNumber?: string | null
+    }
+
+    /** Properties of a HydratedURLButton. */
+    export interface HydratedURLButton
+        extends proto.HydratedTemplateButton.IHydratedURLButton {
+        /** HydratedURLButton displayText */
+        displayText?: string | null
+
+        /** HydratedURLButton url */
+        url?: string | null
+
+        /** HydratedURLButton consentedUsersUrl */
+        consentedUsersUrl?: string | null
+
+        /** HydratedURLButton webviewPresentation */
+        webviewPresentation?: proto.HydratedTemplateButton.HydratedURLButton.WebviewPresentationType | null
+    }
+
+    /** Properties of a HydratedQuickReplyButton. */
+    export interface HydratedQuickReplyButton
+        extends proto.HydratedTemplateButton.IHydratedQuickReplyButton {
+        /** HydratedQuickReplyButton displayText */
+        displayText?: string | null
+
+        /** HydratedQuickReplyButton id */
+        id?: string | null
+    }
+}
+
+/** Properties of a HydratedTemplateButton. */
+export interface HydratedTemplateButtonType extends proto.IHydratedTemplateButton {
+    /** HydratedTemplateButton index */
+    index?: number | null
+
+    /** HydratedTemplateButton quickReplyButton */
+    quickReplyButton?: HydratedTemplateButtonType.HydratedQuickReplyButton | null
+
+    /** HydratedTemplateButton urlButton */
+    urlButton?: HydratedTemplateButtonType.HydratedURLButton | null
+
+    /** HydratedTemplateButton callButton */
+    callButton?: HydratedTemplateButtonType.HydratedCallButton | null
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace TemplateMessageType {
+    /** Properties of a FourRowTemplate. */
+    export interface FourRowTemplate
+        extends proto.Message.TemplateMessage.IFourRowTemplate {
+        /** FourRowTemplate content */
+        content?: HighlyStructuredMessageType | null
+
+        /** FourRowTemplate footer */
+        footer?: HighlyStructuredMessageType | null
+
+        /** FourRowTemplate buttons */
+        buttons?: TemplateButtonType[] | null
+
+        /** FourRowTemplate documentMessage */
+        documentMessage?: DocumentMessageType | null
+
+        /** FourRowTemplate highlyStructuredMessage */
+        highlyStructuredMessage?: HighlyStructuredMessageType | null
+
+        /** FourRowTemplate imageMessage */
+        imageMessage?: ImageMessageType | null
+
+        /** FourRowTemplate videoMessage */
+        videoMessage?: VideoMessageType | null
+
+        /** FourRowTemplate locationMessage */
+        locationMessage?: LocationMessageType | null
+    }
+
+    /** Properties of a HydratedFourRowTemplate. */
+    export interface HydratedFourRowTemplate
+        extends proto.Message.TemplateMessage.IHydratedFourRowTemplate {
+        /** HydratedFourRowTemplate hydratedContentText */
+        hydratedContentText?: string | null
+
+        /** HydratedFourRowTemplate hydratedFooterText */
+        hydratedFooterText?: string | null
+
+        /** HydratedFourRowTemplate hydratedButtons */
+        hydratedButtons?: HydratedTemplateButtonType[] | null
+
+        /** HydratedFourRowTemplate templateId */
+        templateId?: string | null
+
+        /** HydratedFourRowTemplate maskLinkedDevices */
+        maskLinkedDevices?: boolean | null
+
+        /** HydratedFourRowTemplate documentMessage */
+        documentMessage?: DocumentMessageType | null
+
+        /** HydratedFourRowTemplate hydratedTitleText */
+        hydratedTitleText?: string | null
+
+        /** HydratedFourRowTemplate imageMessage */
+        imageMessage?: ImageMessageType | null
+
+        /** HydratedFourRowTemplate videoMessage */
+        videoMessage?: VideoMessageType | null
+
+        /** HydratedFourRowTemplate locationMessage */
+        locationMessage?: LocationMessageType | null
+    }
+}
+
+/** Properties of a TemplateMessage. */
+export interface TemplateMessageType extends proto.Message.ITemplateMessage {
+    /** TemplateMessage contextInfo */
+    contextInfo?: any | null
+
+    /** TemplateMessage hydratedTemplate */
+    hydratedTemplate?: TemplateMessageType.HydratedFourRowTemplate | null
+
+    /** TemplateMessage templateId */
+    templateId?: string | null
+
+    /** TemplateMessage fourRowTemplate */
+    fourRowTemplate?: TemplateMessageType.FourRowTemplate | null
+
+    /** TemplateMessage hydratedFourRowTemplate */
+    hydratedFourRowTemplate?: TemplateMessageType.HydratedFourRowTemplate | null
+
+    /** TemplateMessage interactiveMessageTemplate */
+    interactiveMessageTemplate?: any | null
+}
+
+/** Properties of a LiveLocationMessage. */
+export interface LiveLocationMessageType extends proto.Message.ILiveLocationMessage {
+    /** LiveLocationMessage degreesLatitude */
+    degreesLatitude?: number | null
+
+    /** LiveLocationMessage degreesLongitude */
+    degreesLongitude?: number | null
+
+    /** LiveLocationMessage accuracyInMeters */
+    accuracyInMeters?: number | null
+
+    /** LiveLocationMessage speedInMps */
+    speedInMps?: number | null
+
+    /** LiveLocationMessage degreesClockwiseFromMagneticNorth */
+    degreesClockwiseFromMagneticNorth?: number | null
+
+    /** LiveLocationMessage caption */
+    caption?: string | null
+
+    /** LiveLocationMessage sequenceNumber */
+    sequenceNumber?: number | Long | null
+
+    /** LiveLocationMessage timeOffset */
+    timeOffset?: number | null
+
+    /** LiveLocationMessage jpegThumbnail */
+    jpegThumbnail?: Uint8Array | null
+
+    /** LiveLocationMessage contextInfo */
+    contextInfo?: any | null
+}
+
+/** Properties of a HighlyStructuredMessage. */
+export interface HighlyStructuredMessageType
+    extends proto.Message.IHighlyStructuredMessage {
+    /** HighlyStructuredMessage namespace */
+    namespace?: string | null
+
+    /** HighlyStructuredMessage elementName */
+    elementName?: string | null
+
+    /** HighlyStructuredMessage params */
+    params?: string[] | null
+
+    /** HighlyStructuredMessage fallbackLg */
+    fallbackLg?: string | null
+
+    /** HighlyStructuredMessage fallbackLc */
+    fallbackLc?: string | null
+
+    /** HighlyStructuredMessage localizableParams */
+    localizableParams?: any[] | null
+
+    /** HighlyStructuredMessage deterministicLg */
+    deterministicLg?: string | null
+
+    /** HighlyStructuredMessage deterministicLc */
+    deterministicLc?: string | null
+
+    /** HighlyStructuredMessage hydratedHsm */
+    hydratedHsm?: TemplateMessageType | null
+}
+
+/** Properties of a ContactsArrayMessage. */
+export interface ContactsArrayMessageType extends proto.Message.IContactsArrayMessage {
+    /** ContactsArrayMessage displayName */
+    displayName?: string | null
+
+    /** ContactsArrayMessage contacts */
+    contacts?: ContactMessageType[] | null
+
+    /** ContactsArrayMessage contextInfo */
+    contextInfo?: any | null
+}
+
+/** Properties of a Chat. */
+export interface ChatMessageType extends proto.Message.IChat {
     /** Chat displayName */
     displayName?: string | null
 
@@ -176,6 +596,7 @@ export interface MessageChatType extends proto.Message.IChat {
     id?: string | null
 }
 
+/** Properties of a VideoMessage. */
 export interface VideoMessageType extends proto.Message.IVideoMessage {
     /** VideoMessage url */
     url?: string | null
@@ -245,8 +666,12 @@ export interface VideoMessageType extends proto.Message.IVideoMessage {
 
     /** VideoMessage staticUrl */
     staticUrl?: string | null
+
+    /** VideoMessage annotations */
+    annotations?: any[] | null
 }
 
+/** Properties of an AudioMessage. */
 export interface AudioMessageType extends proto.Message.IAudioMessage {
     /** AudioMessage url */
     url?: string | null
@@ -294,6 +719,7 @@ export interface AudioMessageType extends proto.Message.IAudioMessage {
     viewOnce?: boolean | null
 }
 
+/** Properties of a DocumentMessage. */
 export interface DocumentMessageType extends proto.Message.IDocumentMessage {
     /** DocumentMessage url */
     url?: string | null
@@ -358,6 +784,7 @@ export interface DocumentMessageType extends proto.Message.IDocumentMessage {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ExtendedTextMessageType {
+    /** InviteLinkGroupType enum. */
     export enum InviteLinkGroupType {
         DEFAULT = 0,
         PARENT = 1,
@@ -365,18 +792,19 @@ export namespace ExtendedTextMessageType {
         DEFAULT_SUB = 3,
     }
 
+    /** PreviewType enum. */
     export enum PreviewType {
         NONE = 0,
         VIDEO = 1,
+        PLACEHOLDER = 4,
+        IMAGE = 5,
     }
 
+    /** FontType enum. */
     export enum FontType {
-        SANS_SERIF = 0,
-        SERIF = 1,
-        NORICAN_REGULAR = 2,
-        BRYNDAN_WRITE = 3,
-        BEBASNEUE_REGULAR = 4,
-        OSWALD_HEAVY = 5,
+        SYSTEM = 0,
+        SYSTEM_TEXT = 1,
+        FB_SCRIPT = 2,
         SYSTEM_BOLD = 6,
         MORNINGBREEZE_REGULAR = 7,
         CALISTOGA_REGULAR = 8,
@@ -385,6 +813,7 @@ export namespace ExtendedTextMessageType {
     }
 }
 
+/** Properties of an ExtendedTextMessage. */
 export interface ExtendedTextMessageType extends proto.Message.IExtendedTextMessage {
     /** ExtendedTextMessage text */
     text?: string | null
@@ -459,6 +888,7 @@ export interface ExtendedTextMessageType extends proto.Message.IExtendedTextMess
     viewOnce?: boolean | null
 }
 
+/** Properties of a LocationMessage. */
 export interface LocationMessageType extends proto.Message.ILocationMessage {
     /** LocationMessage degreesLatitude */
     degreesLatitude?: number | null
@@ -497,6 +927,7 @@ export interface LocationMessageType extends proto.Message.ILocationMessage {
     contextInfo?: any | null
 }
 
+/** Properties of a ContactMessage. */
 export interface ContactMessageType extends proto.Message.IContactMessage {
     /** ContactMessage displayName */
     displayName?: string | null
@@ -508,6 +939,7 @@ export interface ContactMessageType extends proto.Message.IContactMessage {
     contextInfo?: any | null
 }
 
+/** Properties of an ImageMessage. */
 export interface ImageMessageType extends proto.Message.IImageMessage {
     /** ImageMessage url */
     url?: string | null
@@ -586,8 +1018,12 @@ export interface ImageMessageType extends proto.Message.IImageMessage {
 
     /** ImageMessage staticUrl */
     staticUrl?: string | null
+
+    /** ImageMessage annotations */
+    annotations?: any[] | null
 }
 
+/** Properties of a Message. */
 export interface MessageType extends proto.IMessage {
     /** Message conversation */
     conversation?: string | null
@@ -620,16 +1056,16 @@ export interface MessageType extends proto.IMessage {
     call?: any | null
 
     /** Message chat */
-    chat?: MessageChatType | null
+    chat?: ChatMessageType | null
 
     /** Message protocolMessage */
     protocolMessage?: any | null
 
     /** Message contactsArrayMessage */
-    contactsArrayMessage?: any | null
+    contactsArrayMessage?: ContactsArrayMessageType | null
 
     /** Message highlyStructuredMessage */
-    highlyStructuredMessage?: any | null
+    highlyStructuredMessage?: HighlyStructuredMessageType | null
 
     /** Message fastRatchetKeySenderKeyDistributionMessage */
     fastRatchetKeySenderKeyDistributionMessage?: any | null
@@ -638,7 +1074,7 @@ export interface MessageType extends proto.IMessage {
     sendPaymentMessage?: any | null
 
     /** Message liveLocationMessage */
-    liveLocationMessage?: any | null
+    liveLocationMessage?: LiveLocationMessageType | null
 
     /** Message requestPaymentMessage */
     requestPaymentMessage?: any | null
@@ -650,7 +1086,7 @@ export interface MessageType extends proto.IMessage {
     cancelPaymentRequestMessage?: any | null
 
     /** Message templateMessage */
-    templateMessage?: any | null
+    templateMessage?: TemplateMessageType | null
 
     /** Message stickerMessage */
     stickerMessage?: any | null
@@ -659,7 +1095,7 @@ export interface MessageType extends proto.IMessage {
     groupInviteMessage?: any | null
 
     /** Message templateButtonReplyMessage */
-    templateButtonReplyMessage?: TemplateMessageType | null
+    templateButtonReplyMessage?: TemplateButtonMessageType | null
 
     /** Message productMessage */
     productMessage?: any | null
@@ -680,7 +1116,7 @@ export interface MessageType extends proto.IMessage {
     orderMessage?: any | null
 
     /** Message listResponseMessage */
-    listResponseMessage?: any | null
+    listResponseMessage?: ListResponseMessageType | null
 
     /** Message ephemeralMessage */
     ephemeralMessage?: ContainedMessageType | null
@@ -759,6 +1195,39 @@ export interface MessageType extends proto.IMessage {
 
     /** Message botInvokeMessage */
     botInvokeMessage?: ContainedMessageType | null
+
+    /** Message callLogMesssage */
+    callLogMesssage?: any | null
+
+    /** Message messageHistoryBundle */
+    messageHistoryBundle?: any | null
+
+    /** Message encCommentMessage */
+    encCommentMessage?: any | null
+
+    /** Message bcallMessage */
+    bcallMessage?: any | null
+
+    /** Message lottieStickerMessage */
+    lottieStickerMessage?: ContainedMessageType | null
+
+    /** Message eventMessage */
+    eventMessage?: EventMessageType | null
+
+    /** Message commentMessage */
+    commentMessage?: CommentMessageType | null
+
+    /** Message newsletterAdminInviteMessage */
+    newsletterAdminInviteMessage?: any | null
+
+    /** Message extendedTextMessageWithParentKey */
+    extendedTextMessageWithParentKey?: ExtendedTextParentMessageType | null
+
+    /** Message placeholderMessage */
+    placeholderMessage?: any | null
+
+    /** Message encEventUpdateMessage */
+    encEventUpdateMessage?: any | null
 }
 
 export interface ReceiptType extends proto.IUserReceipt {
@@ -781,6 +1250,7 @@ export interface ReceiptType extends proto.IUserReceipt {
     deliveredDeviceJid?: string[] | null
 }
 
+/** Properties of a MessageKey. */
 export interface KeyType extends proto.IMessageKey {
     /** MessageKey remoteJid */
     remoteJid?: string | null
@@ -789,7 +1259,7 @@ export interface KeyType extends proto.IMessageKey {
     fromMe?: boolean | null
 
     /** MessageKey id */
-    id?: string
+    id?: string | null
 
     /** MessageKey participant */
     participant?: string | null
@@ -808,6 +1278,7 @@ export namespace MessageInfoType {
     }
 }
 
+/** Properties of a WebMessageInfo. */
 export default interface MessageInfoType extends proto.IWebMessageInfo {
     /** data store key */
     _id: string
@@ -878,7 +1349,7 @@ export default interface MessageInfoType extends proto.IWebMessageInfo {
     paymentInfo?: any | null
 
     /** WebMessageInfo finalLiveLocation */
-    finalLiveLocation?: any | null
+    finalLiveLocation?: LiveLocationMessageType | null
 
     /** WebMessageInfo quotedPaymentInfo */
     quotedPaymentInfo?: any | null
@@ -948,4 +1419,28 @@ export default interface MessageInfoType extends proto.IWebMessageInfo {
 
     /** WebMessageInfo pinInChat */
     pinInChat?: any | null
+
+    /** WebMessageInfo premiumMessageInfo */
+    premiumMessageInfo?: any | null
+
+    /** WebMessageInfo is1PBizBotMessage */
+    is1PBizBotMessage?: boolean | null
+
+    /** WebMessageInfo isGroupHistoryMessage */
+    isGroupHistoryMessage?: boolean | null
+
+    /** WebMessageInfo botMessageInvokerJid */
+    botMessageInvokerJid?: string | null
+
+    /** WebMessageInfo commentMetadata */
+    commentMetadata?: any | null
+
+    /** WebMessageInfo eventResponses */
+    eventResponses?: any[] | null
+
+    /** WebMessageInfo reportingTokenInfo */
+    reportingTokenInfo?: any | null
+
+    /** WebMessageInfo newsletterServerId */
+    newsletterServerId?: number | Long | null
 }

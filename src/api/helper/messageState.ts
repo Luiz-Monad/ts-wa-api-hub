@@ -1,6 +1,6 @@
 import { proto } from '@whiskeysockets/baileys'
 import getLogger from '../../config/logging'
-import MessageInfoType from '../models/message.model'
+import MessageInfoType, { MessageType } from '../models/message.model'
 import getDatabaseService from '../service/database'
 import { AppType, TypeOfPromise } from './types'
 import { BaileysEventMap } from '@whiskeysockets/baileys/lib/Types/Events'
@@ -20,14 +20,14 @@ export default async function useMessageState (app: AppType, key: string) {
         ...key,
         id: _id,
     })
-    const fixMessage = (message: Partial<proto.IMessage>, _id: string) => ({
+    const fixMessage = (message: Partial<proto.IMessage>, _id: string): MessageType => ({
         ...message,
     })
     const fixMessageInfoId = (
         message: Partial<proto.IWebMessageInfo>,
         key: Partial<proto.IMessageKey>,
         _id: string
-    ) => ({
+    ): MessageInfoType => ({
         ...message,
         _id: _id,
         key: fixKey(key, message.key ?? {}, _id),

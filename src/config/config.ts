@@ -13,7 +13,6 @@ const PROTECT_ROUTES = isEnabled(process.env.PROTECT_ROUTES)
 // ==================================
 // APPLICATION CONFIGURATION
 // ==================================
-const DEBUG = isEnabled(process.env.DEBUG)
 const PORT = process.env.PORT || '3333'
 const APP_URL = process.env.APP_URL || null
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
@@ -91,7 +90,6 @@ const MARK_MESSAGES_READ = isEnabled(process.env.MARK_MESSAGES_READ)
 // EXPORT
 // ==================================
 export default {
-    debug: DEBUG,
     port: PORT,
     token: TOKEN,
     appUrl: APP_URL,

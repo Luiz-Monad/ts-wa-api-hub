@@ -27,6 +27,10 @@ export class MultiCallback extends Callback {
     register (callback: Callback) {
         this.callbacks.push(callback)
     }
+
+    unregister (callback: Callback) {
+        this.callbacks = this.callbacks.filter((c) => c != callback)
+    }
 }
 
 export async function initCallbackService (app: AppType, server: ServerType) {

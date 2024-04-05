@@ -23,7 +23,11 @@ class Session {
                 try {
                     const query = {}
                     const _ = await db.table(key).find(query)
-                    const instance = new WhatsAppInstance(this.app, key)
+                    const instance = new WhatsAppInstance(
+                        this.app,
+                        key,
+                        /*allowCallback*/ true
+                    )
                     await instance.init()
                     service.register(instance)
                     restoredSessions.push(key)

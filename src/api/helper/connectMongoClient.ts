@@ -2,7 +2,6 @@ import { Collection, Db, MongoClient, Document, Filter, WithId, WithoutId } from
 import { AppType } from './types'
 import config from '../../config/config'
 import Database, { Keyed, Record, Table, Value } from '../models/db.model'
-import Chat from '../models/chat.model'
 import getLogger from '../../config/logging'
 
 const logger = getLogger('database')
@@ -100,17 +99,15 @@ class MongoTable<T extends Document> extends Table<T> {
 
 class MongoDatabase extends Database {
     db: Db
-    Chat: Table<Chat>
 
     constructor (mongoClient: MongoClient) {
         super()
         this.db = mongoClient.db('whatsapp-api')
-        this.Chat = this.table('Chat')
     }
 
     async listTable<T> (): Promise<Table<T>[]> {
         const collections = await this.db.listCollections().toArray()
-        return collections.filter((c) => c.name !== 'Chat').map((c) => this.table(c.name))
+        return collections.map((c) => this.table(c.name))
     }
 
     table<T> (name: string): Table<T> {

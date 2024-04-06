@@ -2,11 +2,11 @@ import { AppType } from './types'
 import lockfile from 'proper-lockfile'
 import config from '../../config/config'
 import Database, { Keyed, Record, Table, Value } from '../models/db.model'
-import Chat from '../models/chat.model'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as util from 'util'
 import getLogger from '../../config/logging'
+import sanitize from 'sanitize-filename'
 
 const logger = getLogger('database')
 
@@ -36,7 +36,7 @@ class FsTable<T> extends Table<T> {
 
     constructor (directory: string, name: string) {
         super()
-        this.name = name
+        this.name = sanitize(name, { replacement: '_' })
         this.filePath = path.join(directory, `${name}.json`)
     }
 
@@ -199,20 +199,16 @@ class FsTable<T> extends Table<T> {
 
 class FsDatabase extends Database {
     directory: string
-    Chat: Table<Chat>
 
     // eslint-disable-next-line @typescript-eslint/ban-types
     constructor (directory: string, options: {}) {
         super()
         this.directory = directory
-        this.Chat = this.table('Chat')
     }
 
     async listTable<T> (): Promise<Table<T>[]> {
         const fileNames = await readdir(this.directory)
-        return fileNames
-            .filter((name) => name !== 'Chat.json' && name.endsWith('.json'))
-            .map((name) => this.table(path.basename(name, '.json')))
+        return fileNames.map((name) => this.table(path.basename(name, '.json')))
     }
 
     table<T> (name: string): Table<T> {

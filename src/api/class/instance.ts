@@ -263,6 +263,14 @@ class WhatsAppInstance {
                 }
 
                 if (qr) {
+                    await this._sendCallback(
+                        'connection:key',
+                        {
+                            connection: connection,
+                            qr: qr,
+                        },
+                        this.key
+                    )
                     this.logger.info(`qr: ${qr}`)
                     QRCode.toDataURL(qr).then((base64image) => {
                         this.instance.qr = base64image

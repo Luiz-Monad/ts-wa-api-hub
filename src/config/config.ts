@@ -17,6 +17,7 @@ const PORT = process.env.PORT || '3333'
 const APP_URL = process.env.APP_URL || null
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
 const WA_LOG_LEVEL = process.env.WA_LOG_LEVEL || 'info'
+const WA_QR_LOG_LEVEL = process.env.WA_QR_LOG_LEVEL || 'info'
 const HTTP_LOG_LEVEL = process.env.HTTP_LOG_LEVEL || 'info'
 
 // ==================================
@@ -96,6 +97,7 @@ export default {
     log: {
         level: LOG_LEVEL,
         waLevel: WA_LOG_LEVEL,
+        waQrLevel: WA_QR_LOG_LEVEL,
         httpLevel: HTTP_LOG_LEVEL,
     },
     instance: {

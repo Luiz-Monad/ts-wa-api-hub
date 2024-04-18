@@ -1,6 +1,7 @@
 const callBackFilters = {
     'connection:close': ['all', 'connection', 'connection.update', 'connection:close'],
     'connection:open': ['all', 'connection', 'connection.update', 'connection:open'],
+    'connection:key': ['all', 'connection', 'connection.update', 'connection:key'],
     'presence': ['all', 'presence', 'presence.update'],
     'message': ['all', 'messages', 'messages.upsert'],
     'call_offer': ['all', 'call', 'CB:call', 'call:offer'],

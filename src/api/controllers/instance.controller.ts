@@ -2,34 +2,32 @@ import WhatsAppInstance from '../class/instance'
 import config from '../../config/config'
 import { ReqHandler } from '../helper/types'
 import getInstanceForReq, { getInstanceService } from '../service/instance'
-import getSessionService from '../service/session'
+import { getSessionService } from '../service/session'
 
 export const init: ReqHandler = async (req, res) => {
     const key = <string>req.query.key
     const mobile = !req.query.mobile ? false : !!req.query.mobile
     const webhook = !req.query.webhook ? false : !!req.query.webhook
-    const webhookUrl = !req.query.webhook ? null : <string>req.query.webhookUrl
+    const webhookUrl = !req.query.webhook ? undefined : <string>req.query.webhookUrl
     const websocket = !req.query.websocket ? false : !!req.query.websocket
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(
-        req.app,
-        key,
-        mobile,
-        webhook || websocket,
-        webhookUrl
-    )
+    const instance = new WhatsAppInstance(req.app, {
+        key: key,
+        mobile: mobile,
+        allowCallback: webhook || websocket,
+        callbackAddress: webhookUrl,
+    })
     const data = await instance.init()
-    getInstanceService(req.app).register(data)
     res.json({
         error: false,
         message: 'Initializing successfully',
-        key: data.key,
+        key: data.config.key,
         webhook: {
             enabled: webhook,
             webhookUrl: webhookUrl,
         },
         qrcode: {
-            url: appUrl + '/instance/qr?key=' + data.key,
+            url: appUrl + '/instance/qr?key=' + data.config.key,
         },
         browser: config.browser,
     })
@@ -37,7 +35,7 @@ export const init: ReqHandler = async (req, res) => {
 
 export const qr: ReqHandler = async (req, res) => {
     try {
-        const qrcode = await getInstanceForReq(req)?.instance.qr
+        const qrcode = await getInstanceForReq(req)?.config.qr
         res.render('qrcode', {
             qrcode: qrcode,
         })
@@ -50,7 +48,7 @@ export const qr: ReqHandler = async (req, res) => {
 
 export const qrbase64: ReqHandler = async (req, res) => {
     try {
-        const qrcode = await getInstanceForReq(req)?.instance.qr
+        const qrcode = await getInstanceForReq(req)?.config.qr
         res.json({
             error: false,
             message: 'QR Base64 fetched successfully',
@@ -65,7 +63,7 @@ export const qrbase64: ReqHandler = async (req, res) => {
 
 export const qrurl: ReqHandler = async (req, res) => {
     try {
-        const qrurl = await getInstanceForReq(req)?.instance.qr_url
+        const qrurl = await getInstanceForReq(req)?.config.qr_url
         res.json({
             error: false,
             message: 'QR url fetched successfully',
@@ -80,7 +78,7 @@ export const qrurl: ReqHandler = async (req, res) => {
 
 export const info: ReqHandler = async (req, res) => {
     const instance = getInstanceForReq(req)
-    const data = await instance.getInstanceDetail(<string>req.query.key)
+    const data = await instance.getInstanceDetail()
     return res.json({
         error: false,
         message: 'Instance fetched successfully',
@@ -88,9 +86,9 @@ export const info: ReqHandler = async (req, res) => {
     })
 }
 
-export const restore: ReqHandler = async (req, res, next) => {
+export const restore: ReqHandler = async (req, res) => {
     const session = getSessionService(req.app)
-    const restoredSessions = await session.instance.restoreSessions()
+    const restoredSessions = await session.restoreSessions()
     return res.json({
         error: false,
         message: 'All instances restored',
@@ -116,8 +114,7 @@ export const remove: ReqHandler = async (req, res) => {
     let errormsg
     try {
         const instance = getInstanceForReq(req)
-        await instance.deleteInstance(<string>req.query.key)
-        getInstanceService(req.app).unregister(instance)
+        await instance.deleteInstance()
     } catch (error) {
         errormsg = error
     }
@@ -134,7 +131,7 @@ export const list: ReqHandler = async (req, res) => {
         const instances = []
         for (const key of keys) {
             try {
-                instances.push(await service.get(key).getInstanceDetail(key))
+                instances.push(await service.get(key).getInstanceDetail())
             } catch {}
         }
         return instances
@@ -147,7 +144,7 @@ export const list: ReqHandler = async (req, res) => {
             data: await readDetails(instances),
         })
     }
-    const keys = await getSessionService(req.app).instance.readSessions()
+    const keys = await getSessionService(req.app).readSessions()
     return res.json({
         error: false,
         message: 'All instances listed',

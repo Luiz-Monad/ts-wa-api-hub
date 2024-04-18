@@ -38,7 +38,7 @@ export async function initCallbackService (app: AppType, server: ServerType) {
     logger.info(`Using MultiCallback service`)
 }
 
-export default function getCallbackService (app: AppType): MultiCallback {
+export function getCallbackService (app: AppType): MultiCallback {
     const CallbackService: MultiCallback = app.get('CallbackService')
     return CallbackService
 }

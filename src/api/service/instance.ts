@@ -9,12 +9,12 @@ class Instance {
     private onUnregisterCallbacks: Callback[] = []
 
     register (instance: WhatsAppInstance) {
-        this.instances[instance.key] = instance
+        this.instances[instance.config.key] = instance
         this.onRegisterCallbacks.forEach((callback) => callback(instance))
     }
 
     unregister (instance: WhatsAppInstance) {
-        delete this.instances[instance.key]
+        delete this.instances[instance.config.key]
         this.onUnregisterCallbacks.forEach((callback) => callback(instance))
     }
 

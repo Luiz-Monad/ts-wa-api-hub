@@ -13,8 +13,11 @@ import useMessageState, { MessageState } from '../helper/messageState'
 import processButton, { ButtonDef } from '../helper/processbtn'
 import processMessage, { MediaType } from '../helper/processmessage'
 import { AppType, FileType } from '../helper/types'
-import getCallbackService from '../service/callback'
+import { getInstanceService } from '../service/instance'
+import { getSessionService } from '../service/session'
+import { getCallbackService } from '../service/callback'
 import { CallBackBody, CallBackType, Callback } from './callback'
+
 import { Boom } from '@hapi/boom'
 import {
     BaileysEventMap,
@@ -86,8 +89,6 @@ class WhatsAppInstance {
         connectTimeoutMs: 2 * 60 * 1000,
         defaultQueryTimeoutMs: 20 * 1000,
     }
-    key: string
-    mobile: boolean
     logger: ReturnType<typeof getLogger>
     authState: AuthState | null = null
     chatState: ChatState | null = null
@@ -95,30 +96,33 @@ class WhatsAppInstance {
     messageState: MessageState | null = null
     callbackInstance: Callback | null = null
 
-    instance = {
+    config = {
+        key: uuidv4(),
+        mobile: false,
+        dropOnConnClose: true,
         qr: '',
         qr_url: '',
         qrRetry: 0,
         initRetry: 0,
         online: false,
+        allowCallback: false,
+        callbackAddress: '',
     }
 
     sock: WASocket | null = null
 
-    constructor (
-        app: AppType,
-        key?: string,
-        mobile?: boolean,
-        allowCallback?: boolean,
-        callbackAddress?: string | null
-    ) {
+    constructor (app: AppType, config: Partial<typeof this.config>) {
         this.app = app
-        this.key = key ? key : uuidv4()
-        this.mobile = !!mobile
-        this.logger = getLogger('instance', this.key)
+        this.config = {
+            ...this.config,
+            ...config,
+        }
+        this.logger = getLogger('instance', this.config.key)
         this.callbackInstance = getCallbackService(this.app)
-        if (allowCallback)
-            this.callbackInstance = this.callbackInstance.enable(callbackAddress)
+        if (this.config.allowCallback)
+            this.callbackInstance = this.callbackInstance.enable(
+                this.config.callbackAddress
+            )
     }
 
     async _sendCallback (type: CallBackType, body: CallBackBody, key: string) {
@@ -128,7 +132,7 @@ class WhatsAppInstance {
 
     async init () {
         try {
-            this.authState = await useAuthState(this.app, this.key)
+            this.authState = await useAuthState(this.app, this.config.key)
             const state = this.authState.readState()
             const socketConfig = {
                 auth: {
@@ -136,17 +140,19 @@ class WhatsAppInstance {
                     /** caching makes the store faster to send/recv messages */
                     keys: makeCacheableSignalKeyStore(
                         state.keys,
-                        getWaCacheLogger(this.key)
+                        getWaCacheLogger(this.config.key)
                     ),
                 },
-                mobile: this.mobile,
+                mobile: this.config.mobile,
                 browser: <[string, string, string]>Object.values(config.browser),
-                logger: getWaLogger(this.key),
+                logger: getWaLogger(this.config.key),
                 printQRInTerminal: isWaQrLoggerDebug(),
                 ...this.socketConfig,
             }
             this.sock = makeWASocket(socketConfig)
             this.setHandler()
+            getInstanceService(this.app).register(this)
+            getSessionService(this.app).saveSession(this)
             return this
         } catch (e) {
             const msg = 'Error when creating instance'
@@ -168,9 +174,9 @@ class WhatsAppInstance {
 
     async _onConnect () {
         if (!config.database.enabled) return
-        this.chatState = await useChatState(this.app, this.key)
-        this.groupState = await useGroupState(this.app, this.key)
-        this.messageState = await useMessageState(this.app, this.key)
+        this.chatState = await useChatState(this.app, this.config.key)
+        this.groupState = await useGroupState(this.app, this.config.key)
+        this.messageState = await useMessageState(this.app, this.config.key)
     }
 
     setHandler () {
@@ -228,37 +234,41 @@ class WhatsAppInstance {
                         (lastDisconnect?.error as Boom)?.output?.statusCode !==
                         DisconnectReason.loggedOut
                     ) {
-                        this.instance.initRetry++
+                        this.config.initRetry++
                         if (
-                            this.instance.initRetry < Number(config.instance.maxRetryInit)
+                            this.config.initRetry < Number(config.instance.maxRetryInit)
                         ) {
                             await this.init()
                         } else {
-                            await this._drop()
+                            if (this.config.dropOnConnClose) {
+                                await this._drop()
+                            }
                             this.logger.info('STATE: Init failure')
-                            this.instance.online = false
+                            this.config.online = false
                         }
                     } else {
-                        await this._drop()
+                        if (this.config.dropOnConnClose) {
+                            await this._drop()
+                        }
                         this.logger.info('STATE: Logged off')
-                        this.instance.online = false
+                        this.config.online = false
                     }
                     await this._sendCallback(
                         'connection:close',
                         {
                             connection: connection,
                         },
-                        this.key
+                        this.config.key
                     )
                 } else if (connection === 'open') {
                     await this._onConnect()
-                    this.instance.online = true
+                    this.config.online = true
                     await this._sendCallback(
                         'connection:open',
                         {
                             connection: connection,
                         },
-                        this.key
+                        this.config.key
                     )
                 }
 
@@ -269,14 +279,14 @@ class WhatsAppInstance {
                             connection: connection,
                             qr: qr,
                         },
-                        this.key
+                        this.config.key
                     )
                     this.logger.info(`qr: ${qr}`)
                     QRCode.toDataURL(qr).then((base64image) => {
-                        this.instance.qr = base64image
-                        this.instance.qr_url = qr
-                        this.instance.qrRetry++
-                        if (this.instance.qrRetry >= Number(config.instance.maxRetryQr)) {
+                        this.config.qr = base64image
+                        this.config.qr_url = qr
+                        this.config.qrRetry++
+                        if (this.config.qrRetry >= Number(config.instance.maxRetryQr)) {
                             // close WebSocket connection
                             this.sock?.ws.close()
                             // remove all events
@@ -286,7 +296,7 @@ class WhatsAppInstance {
                                 )
                             )
                             // terminated
-                            this.instance.qr = ' '
+                            this.config.qr = ' '
                             this.logger.info('socket connection terminated')
                         }
                     })
@@ -300,7 +310,7 @@ class WhatsAppInstance {
         sock?.ev.on('presence.update', async (json) => {
             this.logger.debug(json, 'presence.update')
             try {
-                await this._sendCallback('presence', json, this.key)
+                await this._sendCallback('presence', json, this.config.key)
             } catch (e) {
                 this.logger.error(e, 'presence.update')
             }
@@ -397,10 +407,10 @@ class WhatsAppInstance {
                         return
 
                     const data = {
-                        ...{ key: this.key },
+                        ...{ key: this.config.key },
                         ...msg,
                         messageKey: msg.key,
-                        instanceKey: this.key,
+                        instanceKey: this.config.key,
                         text: <typeof m | null>null,
                         msgContent: <string | null | void>null,
                     }
@@ -433,7 +443,7 @@ class WhatsAppInstance {
                                 break
                         }
                     }
-                    await this._sendCallback('message', data, this.key)
+                    await this._sendCallback('message', data, this.config.key)
                 })
             } catch (e) {
                 this.logger.error(e, 'messages.upsert')
@@ -483,7 +493,7 @@ class WhatsAppInstance {
                                 platform_version: data.attrs.version,
                             },
                         },
-                        this.key
+                        this.config.key
                     )
                 } else if (
                     data.content.find((e: { tag: string }) => e.tag === 'terminate')
@@ -501,7 +511,7 @@ class WhatsAppInstance {
                             timestamp: parseInt(data.attrs.t),
                             reason: data.content[0].attrs.reason,
                         },
-                        this.key
+                        this.config.key
                     )
                 }
             }
@@ -518,7 +528,7 @@ class WhatsAppInstance {
                     {
                         data: newChat,
                     },
-                    this.key
+                    this.config.key
                 )
             } catch (e) {
                 this.logger.error(e, 'groups.upsert')
@@ -536,7 +546,7 @@ class WhatsAppInstance {
                     {
                         data: newChat,
                     },
-                    this.key
+                    this.config.key
                 )
             } catch (e) {
                 this.logger.error(e, 'groups.update')
@@ -553,13 +563,14 @@ class WhatsAppInstance {
                 {
                     data: newChat,
                 },
-                this.key
+                this.config.key
             )
         })
     }
 
-    async deleteInstance (key: string) {
+    async deleteInstance () {
         try {
+            await this._drop()
             if (this.chatState) {
                 await this.chatState.archiveChats()
             }
@@ -569,6 +580,7 @@ class WhatsAppInstance {
             if (this.messageState) {
                 await this.messageState.archiveMessages()
             }
+            getInstanceService(this.app).unregister(this)
         } catch (e) {
             const msg = 'Error when deleting instance'
             this.logger.error(e, msg)
@@ -576,16 +588,16 @@ class WhatsAppInstance {
         }
     }
 
-    async getInstanceDetail (key: string) {
+    async getInstanceDetail () {
         return {
-            instance_key: key,
-            instance_type: this.mobile ? 'mobile' : 'web',
-            phone_connected: this.instance?.online,
+            instance_key: this.config.key,
+            instance_type: this.config.mobile ? 'mobile' : 'web',
+            phone_connected: this.config.online,
             callbackEnabled: this.callbackInstance?.enabled,
             callbackUrl: this.callbackInstance?.address,
             callbackFilters: this.callbackInstance?.filters,
             callbackService: this.callbackInstance?.serviceName,
-            user: this.instance?.online ? this.sock?.user : {},
+            user: this.config?.online ? this.sock?.user : {},
         }
     }
 
@@ -1092,7 +1104,7 @@ class WhatsAppInstance {
 
     async logout () {
         try {
-            return await this.sock?.logout()
+            await this.sock?.logout()
         } catch (e) {
             const msg = 'Error logout failed'
             this.logger.error(e, msg)

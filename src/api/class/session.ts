@@ -16,21 +16,16 @@ class Session {
     async restoreSessions () {
         const restoredSessions: string[] = []
         try {
-            const service = getInstanceService(this.app)
             const db = getDatabaseService(this.app)
-            const sessions = await this.readSessions()
-            for (const key of sessions) {
+            const table = db.table<WhatsAppInstance['config']>('session')
+            const result = await table.find({})
+            for (const config of result ?? []) {
                 try {
-                    const instance = new WhatsAppInstance(
-                        this.app,
-                        key,
-                        /*allowCallback*/ true
-                    )
+                    const instance = new WhatsAppInstance(this.app, config)
                     await instance.init()
-                    service.register(instance)
-                    restoredSessions.push(key)
+                    restoredSessions.push(config.key)
                 } catch (e) {
-                    logger.error(e, `Error restoring session ${key}`)
+                    logger.error(e, `Error restoring session ${config.key}`)
                 }
             }
         } catch (e) {
@@ -42,13 +37,18 @@ class Session {
     async readSessions () {
         const instances: string[] = []
         const db = getDatabaseService(this.app)
-        const result = await db.listTable()
-        result.forEach((table) => {
-            if (table.name.endsWith('-auth')) {
-                instances.push(table.name.split('-auth')[0])
-            }
+        const table = db.table<WhatsAppInstance['config']>('session')
+        const result = await table.find({})
+        result?.forEach((instance) => {
+            instances.push(instance.key)
         })
         return instances
+    }
+
+    async saveSession (session: WhatsAppInstance) {
+        const db = getDatabaseService(this.app)
+        const table = db.table<WhatsAppInstance['config']>('session')
+        await table.replaceOne(session.config, session.config)
     }
 }
 

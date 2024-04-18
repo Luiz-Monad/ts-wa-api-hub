@@ -7,7 +7,7 @@ export const loginVerification: ReqHandler = (req, res, next) => {
         return res.status(403).send({ error: true, message: 'no key query was present' })
     }
     const instance = getInstanceForReq(req)
-    if (!instance.instance?.online) {
+    if (!instance.config?.online) {
         return res.status(401).send({ error: true, message: "phone isn't connected" })
     }
     next()

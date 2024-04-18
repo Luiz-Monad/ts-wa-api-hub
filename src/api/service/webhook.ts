@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios'
 import config from '../../config/config'
 import getLogger from '../../config/logging'
 import { CallBackBody, Callback } from '../class/callback'
-import getCallbackService from './callback'
+import { getCallbackService } from './callback'
 
 const logger = getLogger('webhook')
 

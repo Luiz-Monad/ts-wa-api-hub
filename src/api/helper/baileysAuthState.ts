@@ -1,5 +1,5 @@
 import { proto } from '@whiskeysockets/baileys/WAProto'
-import { AuthenticationCreds } from '@whiskeysockets/baileys'
+import { AuthenticationCreds, initAuthCreds } from '@whiskeysockets/baileys'
 import { Curve, signedKeyPair } from '@whiskeysockets/baileys/lib/Utils/crypto'
 import {
     BufferJSON,
@@ -14,23 +14,6 @@ import getLogger from '../../config/logging'
 type SignalKeyStoreType = any
 
 const logger = getLogger('auth')
-
-const initAuthCreds = () => {
-    const identityKey = Curve.generateKeyPair()
-    return {
-        noiseKey: Curve.generateKeyPair(),
-        signedIdentityKey: identityKey,
-        signedPreKey: signedKeyPair(identityKey, 1),
-        registrationId: generateRegistrationId(),
-        advSecretKey: randomBytes(32).toString('base64'),
-        processedHistoryMessages: [],
-        nextPreKeyId: 1,
-        firstUnuploadedPreKeyId: 1,
-        accountSettings: {
-            unarchiveChats: false,
-        },
-    }
-}
 
 export default async function useAuthState (app: AppType, key: string) {
     const db = getDatabaseService(app)

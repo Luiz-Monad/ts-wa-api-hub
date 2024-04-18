@@ -21,8 +21,6 @@ class Session {
             const sessions = await this.readSessions()
             for (const key of sessions) {
                 try {
-                    const query = {}
-                    const _ = await db.table(key).find(query)
                     const instance = new WhatsAppInstance(
                         this.app,
                         key,
@@ -46,7 +44,9 @@ class Session {
         const db = getDatabaseService(this.app)
         const result = await db.listTable()
         result.forEach((table) => {
-            instances.push(table.name)
+            if (table.name.endsWith('-auth')) {
+                instances.push(table.name.split('-auth')[0])
+            }
         })
         return instances
     }

@@ -5,20 +5,24 @@ import loginVerify from '../middlewares/loginCheck'
 
 const router = express.Router()
 
-router.route('/create').post(keyVerify, loginVerify, controller.create)
-router.route('/listall').get(keyVerify, loginVerify, controller.listAll)
-router.route('/leave').get(keyVerify, loginVerify, controller.leaveGroup)
-router.route('/inviteuser').post(keyVerify, loginVerify, controller.addNewParticipant)
-router.route('/makeadmin').post(keyVerify, loginVerify, controller.makeAdmin)
-router.route('/demoteadmin').post(keyVerify, loginVerify, controller.demoteAdmin)
-router.route('/getinvitecode').get(keyVerify, loginVerify, controller.getInviteCodeGroup)
-router.route('/getinstanceinvitecode').get(keyVerify, loginVerify, controller.getInstanceInviteCodeGroup)
-router.route('/getallgroups').get(keyVerify, loginVerify, controller.getAllGroups)
-router.route('/participantsupdate').post(keyVerify, loginVerify, controller.groupParticipantsUpdate)
-router.route('/settingsupdate').post(keyVerify, loginVerify, controller.groupSettingUpdate)
-router.route('/updatesubject').post(keyVerify, loginVerify, controller.groupUpdateSubject)
-router.route('/updatedescription').post(keyVerify, loginVerify, controller.groupUpdateDescription)
-router.route('/inviteinfo').post(keyVerify, loginVerify, controller.groupInviteInfo)
-router.route('/groupjoin').post(keyVerify, loginVerify, controller.groupJoin)
+const r = router.route
+const k = keyVerify
+const l = loginVerify
+
+r('/create').post(k, l, controller.create)
+r('/listall').get(k, l, controller.listAll)
+r('/leave').get(k, l, controller.leaveGroup)
+r('/inviteuser').post(k, l, controller.addNewParticipant)
+r('/makeadmin').post(k, l, controller.makeAdmin)
+r('/demoteadmin').post(k, l, controller.demoteAdmin)
+r('/getinvitecode').get(k, l, controller.getInviteCodeGroup)
+r('/getinstanceinvitecode').get(k, l, controller.getInstanceInviteCodeGroup)
+r('/getallgroups').get(k, l, controller.getAllGroups)
+r('/participantsupdate').post(k, l, controller.groupParticipantsUpdate)
+r('/settingsupdate').post(k, l, controller.groupSettingUpdate)
+r('/updatesubject').post(k, l, controller.groupUpdateSubject)
+r('/updatedescription').post(k, l, controller.groupUpdateDescription)
+r('/inviteinfo').post(k, l, controller.groupInviteInfo)
+r('/groupjoin').post(k, l, controller.groupJoin)
 
 export default router

@@ -4,11 +4,11 @@
     "parserOptions": {
         "project": ["./tsconfig.json", "./tests/tsconfig.json"]
     },
-    "plugins": ["@typescript-eslint", "prettierx"],
+    "plugins": ["@typescript-eslint", "eslint-plugin-prettier"],
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:prettierx/default"
+        "plugin:prettier/recommended"
     ],
     "env": {
         "es2020": true,

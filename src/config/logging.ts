@@ -181,7 +181,7 @@ export default function getLogger (name: string, instanceId?: string) {
 }
 
 function getWaPinoLogger (name: string, instanceId: string, level: string): WaLogger {
-    return (getPinoLogger(name, instanceId, level) as unknown) as WaLogger
+    return getPinoLogger(name, instanceId, level) as unknown as WaLogger
 }
 
 export function getWaLogger (instanceId: string) {

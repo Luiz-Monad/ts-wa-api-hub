@@ -5,11 +5,15 @@ import loginVerify from '../middlewares/loginCheck'
 
 const router = express.Router()
 
-router.route('/onwhatsapp').get(keyVerify, loginVerify, controller.onWhatsapp)
-router.route('/downProfile').get(keyVerify, loginVerify, controller.downProfile)
-router.route('/getStatus').get(keyVerify, loginVerify, controller.getStatus)
-router.route('/blockUser').get(keyVerify, loginVerify, controller.blockUser)
-router.route('/updateProfilePicture').post(keyVerify, loginVerify, controller.updateProfilePicture)
-router.route('/getuserorgroupbyid').get(keyVerify, loginVerify, controller.getUserOrGroupById)
+const r = router.route
+const k = keyVerify
+const l = loginVerify
+
+r('/onwhatsapp').get(k, l, controller.onWhatsapp)
+r('/downProfile').get(k, l, controller.downProfile)
+r('/getStatus').get(k, l, controller.getStatus)
+r('/blockUser').get(k, l, controller.blockUser)
+r('/updateProfilePicture').post(k, l, controller.updateProfilePicture)
+r('/getuserorgroupbyid').get(k, l, controller.getUserOrGroupById)
 
 export default router

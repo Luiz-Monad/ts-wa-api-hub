@@ -193,7 +193,7 @@ describe('WhatsAppInstance', () => {
             const groupState = {
                 findGroupChat: jest.fn().mockResolvedValue(mockGroup),
             }
-            instance.groupState = (groupState as any) as typeof instance['groupState']
+            instance.groupState = groupState as any as typeof instance['groupState']
             instance._getWhatsAppId = jest.spyOn(instance, '_getWhatsAppId') as any
         })
 
@@ -280,7 +280,7 @@ describe('WhatsAppInstance', () => {
             const groupState = {
                 findGroupChats: jest.fn().mockResolvedValue(sampleGroups),
             }
-            instance.groupState = (groupState as any) as typeof instance['groupState']
+            instance.groupState = groupState as any as typeof instance['groupState']
         })
 
         it('should return all group chats when groupState is available', async () => {
@@ -1438,7 +1438,7 @@ describe('WhatsAppInstance', () => {
                 const groupState = {
                     findGroupChat: jest.fn().mockResolvedValue(sampleGroup),
                 }
-                instance.groupState = (groupState as any) as typeof instance['groupState']
+                instance.groupState = groupState as any as typeof instance['groupState']
                 await prepInstance({
                     groupLeave: jest.fn().mockResolvedValue(response),
                 })
@@ -1494,7 +1494,7 @@ describe('WhatsAppInstance', () => {
                 const groupState = {
                     findGroupChat: jest.fn().mockResolvedValue(sampleGroup),
                 }
-                instance.groupState = (groupState as any) as typeof instance['groupState']
+                instance.groupState = groupState as any as typeof instance['groupState']
                 await prepInstance({
                     groupInviteCode: jest.fn().mockResolvedValue(response),
                 })

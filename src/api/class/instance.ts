@@ -111,7 +111,7 @@ class WhatsAppInstance {
 
     sock: WASocket | null = null
 
-    constructor (app: AppType, config: Partial<typeof this.config>) {
+    constructor (app: AppType, config: Partial<WhatsAppInstance['config']>) {
         this.app = app
         this.config = {
             ...this.config,
@@ -133,7 +133,7 @@ class WhatsAppInstance {
     async init () {
         try {
             this.authState = await useAuthState(this.app, this.config.key)
-            const state = this.authState.readState()
+            const state = await this.authState.readState()
             const socketConfig = {
                 auth: {
                     creds: state.creds,
@@ -164,7 +164,7 @@ class WhatsAppInstance {
     async _drop () {
         try {
             if (this.authState) {
-                this.authState.dropCreds()
+                this.authState.dropState()
             }
             return this
         } catch (e) {
@@ -212,7 +212,7 @@ class WhatsAppInstance {
             this.logger.debug(creds, 'creds.update')
             try {
                 if (this.authState) {
-                    this.authState.saveCreds()
+                    this.authState.saveState(creds)
                 }
             } catch (e) {
                 this.logger.error(e, 'creds.update')

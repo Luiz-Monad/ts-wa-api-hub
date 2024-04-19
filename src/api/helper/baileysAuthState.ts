@@ -1,11 +1,6 @@
 import { proto } from '@whiskeysockets/baileys/WAProto'
 import { AuthenticationCreds, initAuthCreds } from '@whiskeysockets/baileys'
-import { Curve, signedKeyPair } from '@whiskeysockets/baileys/lib/Utils/crypto'
-import {
-    BufferJSON,
-    generateRegistrationId,
-} from '@whiskeysockets/baileys/lib/Utils/generics'
-import { randomBytes } from 'crypto'
+import { BufferJSON } from '@whiskeysockets/baileys/lib/Utils/generics'
 import { AppType, TypeOfPromise } from './types'
 import getDatabaseService from '../service/database'
 import getLogger from '../../config/logging'
@@ -30,11 +25,11 @@ export default async function useAuthState (app: AppType, key: string) {
             throw error
         }
     }
-    const readData = async (id: string) => {
+    const readData = async <T>(id: string) => {
         try {
             const data = await table.findOne({ _id: id })
             if (!data) return null
-            return JSON.parse(JSON.stringify(data), BufferJSON.reviver)
+            return JSON.parse(JSON.stringify(data), BufferJSON.reviver) as T
         } catch (error) {
             logger.warn(error)
             return null
@@ -55,10 +50,11 @@ export default async function useAuthState (app: AppType, key: string) {
             throw error
         }
     }
-    const creds: AuthenticationCreds = (await readData('creds')) || initAuthCreds()
+    const readCreds = async () =>
+        (await readData<AuthenticationCreds>('creds')) || initAuthCreds()
     return {
-        readState: () => ({
-            creds,
+        readState: async () => ({
+            creds: await readCreds(),
             keys: {
                 get: async (type: string, ids: string[]) => {
                     const data: Record<string, SignalKeyStoreType> = {}
@@ -86,11 +82,13 @@ export default async function useAuthState (app: AppType, key: string) {
                 },
             },
         }),
-        saveCreds: () => {
-            return writeData(creds, 'creds')
+        saveState: async (creds: Partial<AuthenticationCreds>) => {
+            const prevCreds = await readCreds()
+            const newCreds = { ...prevCreds, ...creds }
+            return await writeData(newCreds, 'creds')
         },
-        dropCreds: () => {
-            return dropBobbyTable()
+        dropState: async () => {
+            return await dropBobbyTable()
         },
     }
 }

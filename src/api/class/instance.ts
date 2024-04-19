@@ -307,10 +307,10 @@ class WhatsAppInstance {
         })
 
         // sending presence
-        sock?.ev.on('presence.update', async (json) => {
-            this.logger.debug(json, 'presence.update')
+        sock?.ev.on('presence.update', async (pres) => {
+            this.logger.debug(pres, 'presence.update')
             try {
-                await this._sendCallback('presence', json, this.config.key)
+                await this._sendCallback('presence', pres, this.config.key)
             } catch (e) {
                 this.logger.error(e, 'presence.update')
             }

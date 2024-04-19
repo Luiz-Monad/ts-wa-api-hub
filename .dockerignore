@@ -1,7 +1,7 @@
 lib/**
 node_modules/**
 tmp/**
-xmpp/**
+xmpp_server/**
 docker-compose.yml
 Dockerfile
 *.ps1

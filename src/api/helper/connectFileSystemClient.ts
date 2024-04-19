@@ -185,7 +185,7 @@ class FsTable<T> extends Table<T> {
     }
 
     async drop (): Promise<void> {
-        logger.debug({}, 'drop table')
+        logger.debug('drop table')
         const release = await this.lock()
         try {
             await unlink(this.filePath)

@@ -92,7 +92,7 @@ class MongoTable<T extends Document> extends Table<T> {
     }
 
     async drop (): Promise<void> {
-        logger.debug({}, 'drop table')
+        logger.debug('drop table')
         await this.collection.drop()
     }
 }

@@ -5,7 +5,8 @@
         "ms-vscode.vscode-typescript-next",
         "mskelton.npm-outdated",
         "ms-vscode.powershell",
-        "supperchong.pretty-json",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "editorconfig.editorconfig",
+        "moshfeu.compare-folders"
     ]
 }
